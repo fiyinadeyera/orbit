@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "QdQ9KtqSdzMbBSkd0TQXd"
+uri = "file://.local/outputs/Orbit-Project-Deck.pdf"
+type = "pdf"
+title = "Orbit Project Deck.pdf"
