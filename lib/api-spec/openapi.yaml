@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: people
+    description: People and relationship memory
+  - name: capture
+    description: Natural language capture
+  - name: network
+    description: Network views and reconnect prompts
 paths:
   /healthz:
     get:
@@ -24,6 +30,155 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /people:
+    get:
+      operationId: listPeople
+      tags: [people]
+      summary: List people
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: People matching the query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Person"
+    post:
+      operationId: createPerson
+      tags: [people]
+      summary: Add a person manually
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonInput"
+      responses:
+        "201":
+          description: Person created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+  /people/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getPerson
+      tags: [people]
+      summary: Get a person and their relationship history
+      responses:
+        "200":
+          description: Person detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonDetail"
+        "404":
+          description: Person not found
+    patch:
+      operationId: updatePerson
+      tags: [people]
+      summary: Update a person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonUpdate"
+      responses:
+        "200":
+          description: Updated person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+    delete:
+      operationId: deletePerson
+      tags: [people]
+      summary: Delete a person
+      responses:
+        "204":
+          description: Person deleted
+  /people/{id}/interactions:
+    post:
+      operationId: createInteraction
+      tags: [people]
+      summary: Add an interaction to a person
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InteractionInput"
+      responses:
+        "201":
+          description: Interaction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Interaction"
+  /capture:
+    post:
+      operationId: captureNote
+      tags: [capture]
+      summary: Capture a natural language relationship note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureInput"
+      responses:
+        "201":
+          description: Captured person and extracted fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureResult"
+  /reconnects:
+    get:
+      operationId: listReconnects
+      tags: [network]
+      summary: List people who may be due for a reconnection
+      responses:
+        "200":
+          description: Reconnect prompts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReconnectPrompt"
+  /graph:
+    get:
+      operationId: getGraph
+      tags: [network]
+      summary: Get people and relationships for the network graph
+      responses:
+        "200":
+          description: Network graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Graph"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +188,141 @@ components:
           type: string
       required:
         - status
+    Person:
+      type: object
+      required: [id, name, company, role, location, howMet, dateMet, notes, lastContacted, tags, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        company: { type: ["string", "null"] }
+        role: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        howMet: { type: ["string", "null"] }
+        dateMet: { type: ["string", "null"], format: date }
+        notes: { type: ["string", "null"] }
+        lastContacted: { type: ["string", "null"], format: date }
+        tags:
+          type: array
+          items: { type: string }
+        createdAt: { type: string, format: date-time }
+    PersonInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        company: { type: string }
+        role: { type: string }
+        location: { type: string }
+        howMet: { type: string }
+        dateMet: { type: string, format: date }
+        notes: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+    PersonUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        company: { type: string }
+        role: { type: string }
+        location: { type: string }
+        howMet: { type: string }
+        dateMet: { type: string, format: date }
+        notes: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+    Interaction:
+      type: object
+      required: [id, personId, date, summary, rawNote]
+      properties:
+        id: { type: string }
+        personId: { type: string }
+        date: { type: string, format: date }
+        summary: { type: string }
+        rawNote: { type: ["string", "null"] }
+    InteractionInput:
+      type: object
+      required: [summary, date]
+      properties:
+        summary: { type: string, minLength: 1 }
+        rawNote: { type: string }
+        date: { type: string, format: date }
+    Connection:
+      type: object
+      required: [id, personAId, personBId, relationshipType, notes]
+      properties:
+        id: { type: string }
+        personAId: { type: string }
+        personBId: { type: string }
+        relationshipType: { type: string }
+        notes: { type: ["string", "null"] }
+    PersonDetail:
+      allOf:
+        - $ref: "#/components/schemas/Person"
+        - type: object
+          required: [interactions, connections]
+          properties:
+            interactions:
+              type: array
+              items: { $ref: "#/components/schemas/Interaction" }
+            connections:
+              type: array
+              items: { $ref: "#/components/schemas/Connection" }
+    CaptureInput:
+      type: object
+      required: [note]
+      properties:
+        note: { type: string, minLength: 1 }
+    CaptureResult:
+      type: object
+      required: [person, extracted, created]
+      properties:
+        person: { $ref: "#/components/schemas/Person" }
+        extracted:
+          type: object
+          required: [name, company, role, location, interests, connectedTo, context, date, status]
+          properties:
+            name: { type: string }
+            company: { type: ["string", "null"] }
+            role: { type: ["string", "null"] }
+            location: { type: ["string", "null"] }
+            interests:
+              type: array
+              items: { type: string }
+            connectedTo:
+              type: array
+              items: { type: string }
+            context: { type: ["string", "null"] }
+            date: { type: string, format: date }
+            status: { type: ["string", "null"] }
+        created: { type: boolean }
+    ReconnectPrompt:
+      type: object
+      required: [person, daysSinceContact, lastInteraction]
+      properties:
+        person: { $ref: "#/components/schemas/Person" }
+        daysSinceContact: { type: number, minimum: 0 }
+        lastInteraction: { type: ["string", "null"] }
+    Graph:
+      type: object
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            required: [id, name, company, initials, tags]
+            properties:
+              id: { type: string }
+              name: { type: string }
+              company: { type: ["string", "null"] }
+              initials: { type: string }
+              tags:
+                type: array
+                items: { type: string }
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Connection"
 
