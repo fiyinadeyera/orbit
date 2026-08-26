@@ -1,0 +1,42 @@
+[
+  {
+    "id": "4e7b4f41-5d8e-4b2e-8d85-49de2f2b1001",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1.tsx",
+    "title": "Orbit",
+    "description": "Remember people, context, and the right moment to reconnect.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "4e7b4f41-5d8e-4b2e-8d85-49de2f2b1002",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2.tsx",
+    "title": "Weak ties are easy to lose",
+    "description": "The problem Orbit is designed to solve.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "4e7b4f41-5d8e-4b2e-8d85-49de2f2b1003",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3.tsx",
+    "title": "A memory layer for your network",
+    "description": "How Orbit turns relationship context into a living memory layer.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "4e7b4f41-5d8e-4b2e-8d85-49de2f2b1004",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4.tsx",
+    "title": "From one note to the next conversation",
+    "description": "The core capture and reconnect loop.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "4e7b4f41-5d8e-4b2e-8d85-49de2f2b1005",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5.tsx",
+    "title": "Start on iPhone. Grow into native.",
+    "description": "The path from Safari Home Screen app to native iPhone.",
+    "speakerNotes": ""
+  }
+]

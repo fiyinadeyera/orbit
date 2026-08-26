@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/orbit-project-deck/"
+title = "Orbit Project Deck"
+description = "A concise overview of Orbit, a personal relationship intelligence app for capturing context, exploring networks, and reconnecting at the right time."
+version = "1.0.0"
+id = "artifacts/orbit-project-deck"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/orbit-project-deck/" ]
+localPort = 25608
+
+[services.development]
+run = "pnpm --filter @workspace/orbit-project-deck run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/orbit-project-deck", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/orbit-project-deck/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25608"
+BASE_PATH = "/orbit-project-deck/"
