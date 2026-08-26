@@ -240,7 +240,7 @@ export const ListReconnectsResponseItem = zod.object({
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 }),
-  "daysSinceContact": zod.int().min(listReconnectsResponseDaysSinceContactMin),
+  "daysSinceContact": zod.number().min(listReconnectsResponseDaysSinceContactMin),
   "lastInteraction": zod.string().nullable()
 })
 export const ListReconnectsResponse = zod.array(ListReconnectsResponseItem)

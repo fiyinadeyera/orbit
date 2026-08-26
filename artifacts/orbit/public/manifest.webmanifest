@@ -1,0 +1,17 @@
+{
+  "name": "Orbit — Relationship Intelligence",
+  "short_name": "Orbit",
+  "description": "Remember people, context, and the right moment to reconnect.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f6ef",
+  "theme_color": "#2d6957",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
