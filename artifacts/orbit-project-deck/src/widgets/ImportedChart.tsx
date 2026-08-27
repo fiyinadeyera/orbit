@@ -72,7 +72,7 @@ function chartRows(chart: ImportedChartModel) {
   return categories.map((category, index) => {
     const values = chart.series.map((series) => series.values[index] ?? null);
     const total = values.reduce<number>(
-      (sum: number, value) => sum + Math.abs(value ?? 0),
+      (sum, value) => sum + Math.abs(value ?? 0),
       0,
     );
     const scale = percent && total > 0 ? 100 / total : 1;

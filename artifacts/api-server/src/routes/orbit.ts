@@ -64,13 +64,13 @@ function personValues(
 }
 
 router.get("/people", async (req, res): Promise<void> => {
-  const parsed = ListPeopleQueryParams.safeParse(req.query);
+  const parsed = CreatePersonBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const people = await db.select().from(peopleTable).orderBy(desc(peopleTable.createdAt));
+  const people = await db.select().from(peopleTable).orderBy(peopleTable.name);
   const search = parsed.data.search?.trim().toLowerCase();
   const filtered = search
     ? people.filter((person) =>
@@ -90,38 +90,39 @@ router.post("/people", async (req, res): Promise<void> => {
     return;
   }
 
-  const values = personValues(parsed.data);
+  const values = {
+    company: data.company ?? null,
+    role: data.role ?? null,
+    location,
+    howMet: data.context ?? null,
+    notes,
+    tags: data.interests ?? [],
+    lastContacted: date,
+  };
   // If the user didn't pick a date, assume "today" — the day the entry was
   // made is the most reasonable default for when they met this person.
   const dateMet = values.dateMet ?? isoDate(new Date());
   const [person] = await db
-    .insert(peopleTable)
-    .values({
-      id: randomUUID(),
-      name: values.name!,
-      company: values.company,
-      role: values.role,
-      location: values.location,
-      howMet: values.howMet,
-      dateMet,
-      notes: values.notes,
-      tags: values.tags ?? [],
-      lastContacted: dateMet,
-    })
-    .returning();
+    .select({ id: peopleTable.id })
+    .from(peopleTable)
+    .where(eq(peopleTable.id, params.data.id));
+  if (!person) {
+    res.status(404).json({ error: "Person not found." });
+    return;
+  }
 
-  res.status(201).json(CreatePersonResponse.parse(personResponse(person)));
+  res.sendStatus(204);
 });
 
-router.get("/people/:id", async (req, res): Promise<void> => {
-  const params = GetPersonParams.safeParse(req.params);
+router.post("/people/:id/interactions", async (req, res): Promise<void> => {
+  const params = CreateInteractionParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
   const [person] = await db
-    .select()
+    .select({ id: peopleTable.id })
     .from(peopleTable)
     .where(eq(peopleTable.id, params.data.id));
   if (!person) {
@@ -156,8 +157,8 @@ router.get("/people/:id", async (req, res): Promise<void> => {
 });
 
 router.patch("/people/:id", async (req, res): Promise<void> => {
-  const params = UpdatePersonParams.safeParse(req.params);
-  const body = UpdatePersonBody.safeParse(req.body);
+  const params = CreateInteractionParams.safeParse(req.params);
+  const body = ConfirmCaptureBody.safeParse(req.body);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
@@ -167,31 +168,19 @@ router.patch("/people/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const values = personValues(body.data);
+  const values = {
+    company: data.company ?? null,
+    role: data.role ?? null,
+    location,
+    howMet: data.context ?? null,
+    notes,
+    tags: data.interests ?? [],
+    lastContacted: date,
+  };
   const [person] = await db
-    .update(peopleTable)
-    .set(values)
-    .where(eq(peopleTable.id, params.data.id))
-    .returning();
-  if (!person) {
-    res.status(404).json({ error: "Person not found." });
-    return;
-  }
-
-  res.json(UpdatePersonResponse.parse(personResponse(person)));
-});
-
-router.delete("/people/:id", async (req, res): Promise<void> => {
-  const params = DeletePersonParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
-
-  const [person] = await db
-    .delete(peopleTable)
-    .where(eq(peopleTable.id, params.data.id))
-    .returning();
+    .select({ id: peopleTable.id })
+    .from(peopleTable)
+    .where(eq(peopleTable.id, params.data.id));
   if (!person) {
     res.status(404).json({ error: "Person not found." });
     return;
@@ -202,7 +191,26 @@ router.delete("/people/:id", async (req, res): Promise<void> => {
 
 router.post("/people/:id/interactions", async (req, res): Promise<void> => {
   const params = CreateInteractionParams.safeParse(req.params);
-  const body = CreateInteractionBody.safeParse(req.body);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [person] = await db
+    .select({ id: peopleTable.id })
+    .from(peopleTable)
+    .where(eq(peopleTable.id, params.data.id));
+  if (!person) {
+    res.status(404).json({ error: "Person not found." });
+    return;
+  }
+
+  res.sendStatus(204);
+});
+
+router.post("/people/:id/interactions", async (req, res): Promise<void> => {
+  const params = CreateInteractionParams.safeParse(req.params);
+  const body = ConfirmCaptureBody.safeParse(req.body);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
@@ -243,7 +251,7 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
 // caller (voice or typed entry) shows the result for the user to review and
 // edit before it's saved via /capture/confirm.
 router.post("/capture/extract", async (req, res): Promise<void> => {
-  const body = ExtractCaptureBody.safeParse(req.body);
+  const body = ConfirmCaptureBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
     return;
@@ -251,10 +259,10 @@ router.post("/capture/extract", async (req, res): Promise<void> => {
 
   try {
     const extracted = await extractRelationship(body.data.note);
-    const [existing] = await db
-      .select({ id: peopleTable.id })
-      .from(peopleTable)
-      .where(eq(peopleTable.name, extracted.name));
+  const [existing] = await db
+    .select()
+    .from(peopleTable)
+    .where(eq(peopleTable.name, data.name));
 
     res.status(201).json(
       ExtractCaptureResponse.parse({
@@ -329,7 +337,10 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
             id: randomUUID(),
             name: data.name,
             ...values,
-            dateMet: isoDate(new Date()),
+            // Prefer the (possibly user-edited) date confirmed for this
+            // entry over today's date, since it reflects when they
+            // actually met.
+            dateMet: date,
           })
           .returning()
       )[0];

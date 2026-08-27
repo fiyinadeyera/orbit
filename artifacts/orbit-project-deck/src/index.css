@@ -11,15 +11,14 @@
 }
 
 :root {
-  --slide-primary: #2d6957;
-  --slide-accent: #c88462;
-  --slide-bg: #f4f1e9;
-  --slide-text: #1d3b34;
-  --slide-muted: #657c71;
-  --slide-moss: #d8e0d6;
-  --slide-cream: #ebe6d9;
-  --font-display-family: 'Playfair Display', Georgia, serif;
-  --font-body-family: 'DM Sans', Arial, sans-serif;
+  /* Replace these with brand colors */
+  --slide-primary: #4f46e5;
+  --slide-accent: #06b6d4;
+  --slide-bg: #f8fafc;
+  --slide-text: #0f172a;
+  --slide-muted: #64748b;
+  --font-display-family: 'Inter', system-ui, sans-serif;
+  --font-body-family: 'Inter', system-ui, sans-serif;
   color-scheme: light;
 }
 
@@ -34,7 +33,6 @@ body,
 body {
   background: var(--slide-bg);
   color: var(--slide-text);
-  font-family: var(--font-body-family);
 }
 
 .slide {
@@ -47,20 +45,4 @@ body {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-.orbit-paper {
-  background-image: radial-gradient(rgba(45, 105, 87, 0.08) 0.07vw, transparent 0.07vw);
-  background-size: 1.15vw 1.15vw;
-}
-
-.orbit-ring {
-  border: 0.12vw solid rgba(45, 105, 87, 0.25);
-  border-radius: 999px;
-}
-
-.orbit-line {
-  height: 0.12vw;
-  transform-origin: left center;
-  background: rgba(45, 105, 87, 0.36);
 }
