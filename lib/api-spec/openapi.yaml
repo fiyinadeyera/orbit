@@ -274,6 +274,8 @@ components:
       required: [note]
       properties:
         note: { type: string, minLength: 1 }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
     CaptureResult:
       type: object
       required: [person, extracted, created]

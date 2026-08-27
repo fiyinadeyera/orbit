@@ -184,10 +184,18 @@ export const CreateInteractionResponse = zod.object({
  * @summary Capture a natural language relationship note
  */
 
+export const captureNoteBodyLatitudeMin = -90;
+export const captureNoteBodyLatitudeMax = 90;
+
+export const captureNoteBodyLongitudeMin = -180;
+export const captureNoteBodyLongitudeMax = 180;
+
 
 
 export const CaptureNoteBody = zod.object({
-  "note": zod.string().min(1)
+  "note": zod.string().min(1),
+  "latitude": zod.number().min(captureNoteBodyLatitudeMin).max(captureNoteBodyLatitudeMax).optional(),
+  "longitude": zod.number().min(captureNoteBodyLongitudeMin).max(captureNoteBodyLongitudeMax).optional()
 })
 
 export const CaptureNoteResponse = zod.object({

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { getInitials, formatDate } from '@/lib/utils';
+import { getInitials, formatDate, getCurrentCoordinates } from '@/lib/utils';
 import { Send, Clock, Sparkles } from 'lucide-react';
 import { Link } from 'wouter';
 import { toast } from 'sonner';
@@ -22,7 +22,9 @@ export default function Home() {
     e.preventDefault();
     if (!note.trim()) return;
 
-    captureMutation.mutate({ data: { note } }, {
+    const coordinates = await getCurrentCoordinates();
+
+    captureMutation.mutate({ data: { note, ...coordinates } }, {
       onSuccess: (res) => {
         toast.success(res.created ? `Added ${res.person.name} to your network.` : `Logged interaction with ${res.person.name}.`);
         setNote('');
@@ -43,7 +45,8 @@ export default function Home() {
         <div>
           <h1 className="text-3xl font-serif font-bold text-foreground">What do you want to remember?</h1>
           <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-            Jot down who you met, what you talked about, or any context you want to keep. We'll organize it for you.
+            Jot down who you met, what you talked about, or any context you want to keep. We'll organize it for you,
+            using today's date and — if your browser allows it — your current location to help fill in the gaps.
           </p>
         </div>
         

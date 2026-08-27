@@ -28,6 +28,7 @@ import {
   type Person,
 } from "@workspace/db";
 import { extractRelationship } from "../lib/relationship-extraction";
+import { reverseGeocode } from "../lib/geocoding";
 
 const router: IRouter = Router();
 
@@ -88,6 +89,9 @@ router.post("/people", async (req, res): Promise<void> => {
   }
 
   const values = personValues(parsed.data);
+  // If the user didn't pick a date, assume "today" — the day the entry was
+  // made is the most reasonable default for when they met this person.
+  const dateMet = values.dateMet ?? isoDate(new Date());
   const [person] = await db
     .insert(peopleTable)
     .values({
@@ -97,10 +101,10 @@ router.post("/people", async (req, res): Promise<void> => {
       role: values.role,
       location: values.location,
       howMet: values.howMet,
-      dateMet: values.dateMet,
+      dateMet,
       notes: values.notes,
       tags: values.tags ?? [],
-      lastContacted: values.dateMet ?? isoDate(new Date()),
+      lastContacted: dateMet,
     })
     .returning();
 
@@ -247,17 +251,34 @@ router.post("/capture", async (req, res): Promise<void> => {
       .from(peopleTable)
       .where(eq(peopleTable.name, extracted.name));
     const notes = [extracted.status, extracted.context].filter(Boolean).join(" — ") || null;
+
+    // Prefer a location mentioned in the note itself. If none was mentioned,
+    // fall back to reverse-geocoding the device coordinates captured at
+    // entry time (when the browser provided them), so we still get a useful
+    // location without asking the user to type one in.
+    let location = extracted.location;
+    if (!location && body.data.latitude != null && body.data.longitude != null) {
+      location = await reverseGeocode(body.data.latitude, body.data.longitude);
+    }
+    // Never erase a location we already know for this person just because a
+    // later note happened not to mention or infer one.
+    if (!location && existing?.location) {
+      location = existing.location;
+    }
+
     const values = {
       company: extracted.company,
       role: extracted.role,
-      location: extracted.location,
+      location,
       howMet: extracted.context,
-      dateMet: extracted.date,
       notes,
       tags: extracted.interests,
       lastContacted: extracted.date,
     };
 
+    // "Date met" is recorded once, as the day this first entry was made —
+    // not re-derived from note text, and never overwritten on later notes
+    // about the same person.
     const person = existing
       ? (
           await db
@@ -269,7 +290,12 @@ router.post("/capture", async (req, res): Promise<void> => {
       : (
           await db
             .insert(peopleTable)
-            .values({ id: randomUUID(), name: extracted.name, ...values })
+            .values({
+              id: randomUUID(),
+              name: extracted.name,
+              ...values,
+              dateMet: isoDate(new Date()),
+            })
             .returning()
         )[0];
 

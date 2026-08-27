@@ -9,4 +9,14 @@
 export interface CaptureInput {
   /** @minLength 1 */
   note: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude?: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude?: number;
 }
