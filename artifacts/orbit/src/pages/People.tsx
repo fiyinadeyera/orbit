@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useListPeople, useCreatePerson, getListPeopleQueryKey } from '@workspace/api-client-react';
+import { useListPeople, useCreatePerson, useListReconnects, getListPeopleQueryKey } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { getInitials } from '@/lib/utils';
-import { Search, Plus, MapPin, Building, Briefcase } from 'lucide-react';
+import { Search, Plus, MapPin, Building, Briefcase, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function People() {
@@ -19,6 +19,7 @@ export default function People() {
   
   // Custom hook usage with search param mapped if needed, though API just takes raw params
   const { data: people = [], isLoading } = useListPeople({ search: search || undefined });
+  const { data: reconnects = [], isLoading: isLoadingReconnects } = useListReconnects();
   
   const createMutation = useCreatePerson();
 
@@ -96,6 +97,51 @@ export default function People() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-serif font-semibold flex items-center gap-2">
+          <Clock className="w-5 h-5 text-primary" />
+          Time to reconnect
+        </h2>
+
+        <div className="space-y-3">
+          {isLoadingReconnects ? (
+            Array(2)
+              .fill(0)
+              .map((_, i) => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)
+          ) : reconnects.length === 0 ? (
+            <Card className="bg-transparent border-dashed">
+              <CardContent className="p-6 text-center text-muted-foreground text-sm">
+                Your network is fresh. Check back later for reconnect suggestions.
+              </CardContent>
+            </Card>
+          ) : (
+            reconnects.slice(0, 4).map((item) => (
+              <Link key={item.person.id} href={`/people/${item.person.id}`} className="block">
+                <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <Avatar className="h-10 w-10 border border-background">
+                      <AvatarFallback>{getInitials(item.person.name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                        {item.person.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {item.person.company || item.person.role || 'No recent context'}
+                      </p>
+                    </div>
+                    <div className="text-xs text-right shrink-0">
+                      <span className="text-muted-foreground block">{item.daysSinceContact} days</span>
+                      <span className="text-primary font-medium">ago</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))
+          )}
+        </div>
+      </section>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

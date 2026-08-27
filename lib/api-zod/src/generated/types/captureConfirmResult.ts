@@ -5,11 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CaptureResultExtracted } from './captureResultExtracted';
 import type { Person } from './person';
 
-export interface CaptureResult {
+export interface CaptureConfirmResult {
   person: Person;
-  extracted: CaptureResultExtracted;
   created: boolean;
 }

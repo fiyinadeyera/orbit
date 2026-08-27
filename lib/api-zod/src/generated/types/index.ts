@@ -6,10 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from './captureInput';
-export * from './captureResult';
-export * from './captureResultExtracted';
+export * from './captureConfirmInput';
+export * from './captureConfirmResult';
+export * from './captureExtractInput';
+export * from './captureExtractResult';
 export * from './connection';
+export * from './extractedRelationship';
 export * from './graph';
 export * from './graphNodesItem';
 export * from './healthStatus';

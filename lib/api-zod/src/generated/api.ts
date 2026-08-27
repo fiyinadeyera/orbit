@@ -181,24 +181,61 @@ export const CreateInteractionResponse = zod.object({
 
 
 /**
- * @summary Capture a natural language relationship note
+ * @summary Run AI extraction on a note (voice transcript or typed) without saving it
  */
 
-export const captureNoteBodyLatitudeMin = -90;
-export const captureNoteBodyLatitudeMax = 90;
-
-export const captureNoteBodyLongitudeMin = -180;
-export const captureNoteBodyLongitudeMax = 180;
 
 
-
-export const CaptureNoteBody = zod.object({
-  "note": zod.string().min(1),
-  "latitude": zod.number().min(captureNoteBodyLatitudeMin).max(captureNoteBodyLatitudeMax).optional(),
-  "longitude": zod.number().min(captureNoteBodyLongitudeMin).max(captureNoteBodyLongitudeMax).optional()
+export const ExtractCaptureBody = zod.object({
+  "note": zod.string().min(1)
 })
 
-export const CaptureNoteResponse = zod.object({
+export const ExtractCaptureResponse = zod.object({
+  "extracted": zod.object({
+  "name": zod.string(),
+  "company": zod.string().nullable(),
+  "role": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "interests": zod.array(zod.string()),
+  "connectedTo": zod.array(zod.string()),
+  "context": zod.string().nullable(),
+  "date": zod.coerce.date(),
+  "status": zod.string().nullable()
+}),
+  "isExistingPerson": zod.boolean(),
+  "rawNote": zod.string()
+})
+
+
+/**
+ * @summary Save a (possibly user-edited) extracted entry
+ */
+
+
+export const confirmCaptureBodyLatitudeMin = -90;
+export const confirmCaptureBodyLatitudeMax = 90;
+
+export const confirmCaptureBodyLongitudeMin = -180;
+export const confirmCaptureBodyLongitudeMax = 180;
+
+
+
+export const ConfirmCaptureBody = zod.object({
+  "name": zod.string().min(1),
+  "company": zod.string().optional(),
+  "role": zod.string().optional(),
+  "location": zod.string().optional(),
+  "context": zod.string().optional(),
+  "interests": zod.array(zod.string()).optional(),
+  "connectedTo": zod.array(zod.string()).optional(),
+  "status": zod.string().optional(),
+  "date": zod.coerce.date(),
+  "rawNote": zod.string().min(1),
+  "latitude": zod.number().min(confirmCaptureBodyLatitudeMin).max(confirmCaptureBodyLatitudeMax).optional(),
+  "longitude": zod.number().min(confirmCaptureBodyLongitudeMin).max(confirmCaptureBodyLongitudeMax).optional()
+})
+
+export const ConfirmCaptureResponse = zod.object({
   "person": zod.object({
   "id": zod.string(),
   "name": zod.string(),
@@ -211,17 +248,6 @@ export const CaptureNoteResponse = zod.object({
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
-}),
-  "extracted": zod.object({
-  "name": zod.string(),
-  "company": zod.string().nullable(),
-  "role": zod.string().nullable(),
-  "location": zod.string().nullable(),
-  "interests": zod.array(zod.string()),
-  "connectedTo": zod.array(zod.string()),
-  "context": zod.string().nullable(),
-  "date": zod.coerce.date(),
-  "status": zod.string().nullable()
 }),
   "created": zod.boolean()
 })

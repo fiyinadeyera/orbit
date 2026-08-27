@@ -4,10 +4,11 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Shell } from '@/components/layout/Shell';
-import Home from '@/pages/Home';
+import NewEntry from '@/pages/NewEntry';
 import People from '@/pages/People';
 import PersonDetail from '@/pages/PersonDetail';
 import GraphView from '@/pages/Graph';
+import Search from '@/pages/Search';
 import NotFound from '@/pages/not-found';
 import {
   Route,
@@ -30,10 +31,11 @@ function Router() {
     <Shell>
       <RoutedErrorBoundary>
         <Switch>
-          <Route path="/" component={Home} />
+          <Route path="/" component={NewEntry} />
           <Route path="/people" component={People} />
           <Route path="/people/:id" component={PersonDetail} />
           <Route path="/graph" component={GraphView} />
+          <Route path="/search" component={Search} />
           <Route component={NotFound} />
         </Switch>
       </RoutedErrorBoundary>

@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CaptureResultExtracted = {
+export interface ExtractedRelationship {
   name: string;
   /** @nullable */
   company: string | null;
@@ -21,4 +21,4 @@ export type CaptureResultExtracted = {
   date: Date;
   /** @nullable */
   status: string | null;
-};
+}

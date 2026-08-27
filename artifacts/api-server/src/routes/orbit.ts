@@ -2,8 +2,10 @@ import { randomUUID } from "node:crypto";
 import { and, desc, eq, or } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
-  CaptureNoteBody,
-  CaptureNoteResponse,
+  ConfirmCaptureBody,
+  ConfirmCaptureResponse,
+  ExtractCaptureBody,
+  ExtractCaptureResponse,
   CreateInteractionBody,
   CreateInteractionParams,
   CreateInteractionResponse,
@@ -237,8 +239,11 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
   res.status(201).json(CreateInteractionResponse.parse(interaction));
 });
 
-router.post("/capture", async (req, res): Promise<void> => {
-  const body = CaptureNoteBody.safeParse(req.body);
+// Step 1 of capture: run AI extraction only. Nothing is persisted yet — the
+// caller (voice or typed entry) shows the result for the user to review and
+// edit before it's saved via /capture/confirm.
+router.post("/capture/extract", async (req, res): Promise<void> => {
+  const body = ExtractCaptureBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
     return;
@@ -247,108 +252,15 @@ router.post("/capture", async (req, res): Promise<void> => {
   try {
     const extracted = await extractRelationship(body.data.note);
     const [existing] = await db
-      .select()
+      .select({ id: peopleTable.id })
       .from(peopleTable)
       .where(eq(peopleTable.name, extracted.name));
-    const notes = [extracted.status, extracted.context].filter(Boolean).join(" — ") || null;
-
-    // Prefer a location mentioned in the note itself. If none was mentioned,
-    // fall back to reverse-geocoding the device coordinates captured at
-    // entry time (when the browser provided them), so we still get a useful
-    // location without asking the user to type one in.
-    let location = extracted.location;
-    if (!location && body.data.latitude != null && body.data.longitude != null) {
-      location = await reverseGeocode(body.data.latitude, body.data.longitude);
-    }
-    // Never erase a location we already know for this person just because a
-    // later note happened not to mention or infer one.
-    if (!location && existing?.location) {
-      location = existing.location;
-    }
-
-    const values = {
-      company: extracted.company,
-      role: extracted.role,
-      location,
-      howMet: extracted.context,
-      notes,
-      tags: extracted.interests,
-      lastContacted: extracted.date,
-    };
-
-    // "Date met" is recorded once, as the day this first entry was made —
-    // not re-derived from note text, and never overwritten on later notes
-    // about the same person.
-    const person = existing
-      ? (
-          await db
-            .update(peopleTable)
-            .set(values)
-            .where(eq(peopleTable.id, existing.id))
-            .returning()
-        )[0]
-      : (
-          await db
-            .insert(peopleTable)
-            .values({
-              id: randomUUID(),
-              name: extracted.name,
-              ...values,
-              dateMet: isoDate(new Date()),
-            })
-            .returning()
-        )[0];
-
-    await db.insert(interactionsTable).values({
-      id: randomUUID(),
-      personId: person.id,
-      date: extracted.date,
-      summary: extracted.context ?? "Captured a new relationship note.",
-      rawNote: body.data.note,
-    });
-
-    if (extracted.connectedTo.length) {
-      const mentionedPeople = await db.select().from(peopleTable);
-      const matches = mentionedPeople.filter(
-        (candidate) =>
-          candidate.id !== person.id &&
-          extracted.connectedTo.some(
-            (name) => name.toLowerCase() === candidate.name.toLowerCase(),
-          ),
-      );
-      for (const match of matches) {
-        const [alreadyConnected] = await db
-          .select({ id: connectionsTable.id })
-          .from(connectionsTable)
-          .where(
-            or(
-              and(
-                eq(connectionsTable.personAId, person.id),
-                eq(connectionsTable.personBId, match.id),
-              ),
-              and(
-                eq(connectionsTable.personAId, match.id),
-                eq(connectionsTable.personBId, person.id),
-              ),
-            ),
-          );
-        if (!alreadyConnected) {
-          await db.insert(connectionsTable).values({
-            id: randomUUID(),
-            personAId: person.id,
-            personBId: match.id,
-            relationshipType: "Mentioned connection",
-            notes: null,
-          });
-        }
-      }
-    }
 
     res.status(201).json(
-      CaptureNoteResponse.parse({
-        person: personResponse(person),
+      ExtractCaptureResponse.parse({
         extracted,
-        created: !existing,
+        isExistingPerson: Boolean(existing),
+        rawNote: body.data.note,
       }),
     );
   } catch (error) {
@@ -357,6 +269,121 @@ router.post("/capture", async (req, res): Promise<void> => {
       error: error instanceof Error ? error.message : "Could not extract the relationship note.",
     });
   }
+});
+
+// Step 2 of capture: persist the (possibly user-edited) extracted fields.
+router.post("/capture/confirm", async (req, res): Promise<void> => {
+  const body = ConfirmCaptureBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  const data = body.data;
+
+  const [existing] = await db
+    .select()
+    .from(peopleTable)
+    .where(eq(peopleTable.name, data.name));
+  const notes = [data.status, data.context].filter(Boolean).join(" — ") || null;
+  const date = isoDate(data.date);
+
+  // Prefer a location the user confirmed (mentioned in the note or typed
+  // in during review). If none was given, fall back to reverse-geocoding
+  // the device coordinates captured at entry time, so we still get a
+  // useful location without asking the user to type one in.
+  let location = data.location ?? null;
+  if (!location && data.latitude != null && data.longitude != null) {
+    location = await reverseGeocode(data.latitude, data.longitude);
+  }
+  // Never erase a location we already know for this person just because a
+  // later note happened not to mention or infer one.
+  if (!location && existing?.location) {
+    location = existing.location;
+  }
+
+  const values = {
+    company: data.company ?? null,
+    role: data.role ?? null,
+    location,
+    howMet: data.context ?? null,
+    notes,
+    tags: data.interests ?? [],
+    lastContacted: date,
+  };
+
+  // "Date met" is recorded once, as the day this first entry was made —
+  // not re-derived from note text, and never overwritten on later notes
+  // about the same person.
+  const person = existing
+    ? (
+        await db
+          .update(peopleTable)
+          .set(values)
+          .where(eq(peopleTable.id, existing.id))
+          .returning()
+      )[0]
+    : (
+        await db
+          .insert(peopleTable)
+          .values({
+            id: randomUUID(),
+            name: data.name,
+            ...values,
+            dateMet: isoDate(new Date()),
+          })
+          .returning()
+      )[0];
+
+  await db.insert(interactionsTable).values({
+    id: randomUUID(),
+    personId: person.id,
+    date,
+    summary: data.context ?? "Captured a new relationship note.",
+    rawNote: data.rawNote,
+  });
+
+  const connectedTo = data.connectedTo ?? [];
+  if (connectedTo.length) {
+    const mentionedPeople = await db.select().from(peopleTable);
+    const matches = mentionedPeople.filter(
+      (candidate) =>
+        candidate.id !== person.id &&
+        connectedTo.some((name) => name.toLowerCase() === candidate.name.toLowerCase()),
+    );
+    for (const match of matches) {
+      const [alreadyConnected] = await db
+        .select({ id: connectionsTable.id })
+        .from(connectionsTable)
+        .where(
+          or(
+            and(
+              eq(connectionsTable.personAId, person.id),
+              eq(connectionsTable.personBId, match.id),
+            ),
+            and(
+              eq(connectionsTable.personAId, match.id),
+              eq(connectionsTable.personBId, person.id),
+            ),
+          ),
+        );
+      if (!alreadyConnected) {
+        await db.insert(connectionsTable).values({
+          id: randomUUID(),
+          personAId: person.id,
+          personBId: match.id,
+          relationshipType: "Mentioned connection",
+          notes: null,
+        });
+      }
+    }
+  }
+
+  res.status(201).json(
+    ConfirmCaptureResponse.parse({
+      person: personResponse(person),
+      created: !existing,
+    }),
+  );
 });
 
 router.get("/reconnects", async (_req, res): Promise<void> => {

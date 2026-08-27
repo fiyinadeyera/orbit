@@ -1,0 +1,210 @@
+# Orbit — UI & Navigation Revision Specification
+
+Apply the following changes to the existing Orbit build. **Do not rebuild the product from scratch and do not remove existing functionality.** This is a revision to the current specification.
+
+## 1. Default Landing Page
+
+Change the default landing page to **New Entry**.
+
+When the user opens Orbit, they should immediately land on the screen for creating a new entry.
+
+Do **not** open on:
+
+* Dashboard
+* People
+* Network Map
+* Search
+
+The primary purpose of opening the app should be capturing something that just happened.
+
+---
+
+## 2. Primary Navigation
+
+Keep the existing tab-based navigation, but update the tabs to:
+
+1. **New Entry**
+2. **People**
+3. **Network Map**
+4. **Search**
+
+The third tab should specifically be called **Network Map**, not simply Network.
+
+The navigation should remain easily accessible on mobile.
+
+---
+
+## 3. New Entry as the Primary Experience
+
+The New Entry screen should be extremely simple and focused.
+
+The primary question should be something like:
+
+> **What happened?**
+
+Supporting text can explain:
+
+> Capture a person, conversation, introduction, or anything you want Orbit to remember.
+
+The screen should prominently feature a large **Record** button.
+
+The user should immediately understand:
+
+> **Tap Record and start talking.**
+
+Do not make the user fill out a contact form before recording.
+
+---
+
+## 4. Voice-First Interaction
+
+The primary way to create an entry should be **voice**.
+
+The main CTA should be:
+
+**Record**
+
+When the user taps it:
+
+1. Request microphone permission if necessary.
+2. Immediately begin recording.
+3. Show that Orbit is listening.
+4. Display recording duration.
+5. Show a subtle waveform/audio indicator.
+6. Provide a prominent **Stop** button.
+7. Provide a **Cancel** option.
+
+The interaction should feel similar to recording a voice memo.
+
+The user should be able to speak naturally without thinking about fields or categories.
+
+For example:
+
+> “Met Sarah tonight at the AI meetup. She's building a healthcare AI startup with Daniel. She's originally from Chicago and said they're looking for a product person.”
+
+The user should not need to structure this information themselves.
+
+---
+
+## 5. After Recording
+
+Once recording stops:
+
+**Recording → Transcription → AI structuring → Review**
+
+Show a processing state such as:
+
+> **Orbit is organizing this...**
+
+Then display the transcription and the structured information Orbit extracted.
+
+For example:
+
+**Sarah Chen**
+
+Founder · Healthcare AI
+
+**Context**
+Met at AI Meetup
+
+**Interests**
+Healthcare AI
+Startups
+
+**Looking for**
+Product person
+
+**Connected to**
+Daniel
+
+The user should be able to edit the extracted information before saving.
+
+---
+
+## 6. Secondary Text Input
+
+Voice should be the **primary** interaction, but users should also be able to create an entry by typing.
+
+Place a smaller secondary action below the Record button:
+
+> **Type instead**
+
+This should open a text input where the user can write the same kind of natural-language entry.
+
+The same AI extraction pipeline should process typed and spoken entries.
+
+---
+
+## 7. New Entry Screen — Visual Priority
+
+The New Entry screen should have substantially less information than the other tabs.
+
+The hierarchy should be approximately:
+
+```text
+Orbit
+
+What happened?
+
+Capture a person, conversation,
+or anything you want Orbit to remember.
+
+
+        [ RECORD ]
+
+        Tap to record
+
+
+        Type instead
+```
+
+The Record button should be the dominant element.
+
+Avoid filling this screen with:
+
+* contact fields
+* analytics
+* graphs
+* lists
+* complicated navigation
+* CRM-style forms
+
+The user should be able to open Orbit and begin recording within seconds.
+
+---
+
+## 8. Network Map Tab
+
+Rename the third navigation item from:
+
+**Network**
+
+to:
+
+**Network Map**
+
+This tab should continue to display the relationship graph and should remain separate from the People tab.
+
+**People** = browse individual people.
+
+**Network Map** = understand how those people connect.
+
+No other major changes to the existing Network Map functionality are required by this revision.
+
+---
+
+## 9. Core UX Change
+
+The overall navigation hierarchy should now communicate:
+
+**New Entry = capture**
+
+**People = remember individuals**
+
+**Network Map = understand connections**
+
+**Search = retrieve information**
+
+The app should therefore open directly into **capture mode**, rather than making the user navigate to the capture functionality.
+
+Implement these changes on top of the existing Orbit specification and existing application architecture.

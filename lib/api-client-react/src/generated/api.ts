@@ -20,8 +20,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CaptureInput,
-  CaptureResult,
+  CaptureConfirmInput,
+  CaptureConfirmResult,
+  CaptureExtractInput,
+  CaptureExtractResult,
   Graph,
   HealthStatus,
   Interaction,
@@ -586,25 +588,25 @@ export const useCreateInteraction = <TError = ErrorType<unknown>,
       return useMutation(getCreateInteractionMutationOptions(options));
     }
 
-export const getCaptureNoteUrl = () => {
+export const getExtractCaptureUrl = () => {
 
 
 
 
-  return `/api/capture`
+  return `/api/capture/extract`
 }
 
 /**
- * @summary Capture a natural language relationship note
+ * @summary Run AI extraction on a note (voice transcript or typed) without saving it
  */
-export const captureNote = async (captureInput: CaptureInput, options?: Parameters<typeof customFetch>[1]): Promise<CaptureResult> => {
+export const extractCapture = async (captureExtractInput: CaptureExtractInput, options?: Parameters<typeof customFetch>[1]): Promise<CaptureExtractResult> => {
 
-  return customFetch<CaptureResult>(getCaptureNoteUrl(),
+  return customFetch<CaptureExtractResult>(getExtractCaptureUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(captureInput)
+    body: JSON.stringify(captureExtractInput)
   }
 );}
 
@@ -612,11 +614,11 @@ export const captureNote = async (captureInput: CaptureInput, options?: Paramete
 
 
 
-export const getCaptureNoteMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof captureNote>>, TError,{data: BodyType<CaptureInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof captureNote>>, TError,{data: BodyType<CaptureInput>}, TContext> => {
+export const getExtractCaptureMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractCapture>>, TError,{data: BodyType<CaptureExtractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof extractCapture>>, TError,{data: BodyType<CaptureExtractInput>}, TContext> => {
 
-const mutationKey = ['captureNote'];
+const mutationKey = ['extractCapture'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -626,10 +628,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof captureNote>>, {data: BodyType<CaptureInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof extractCapture>>, {data: BodyType<CaptureExtractInput>}> = (props) => {
           const {data} = props ?? {};
 
-          return  captureNote(data,requestOptions)
+          return  extractCapture(data,requestOptions)
         }
 
 
@@ -639,22 +641,93 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CaptureNoteMutationResult = NonNullable<Awaited<ReturnType<typeof captureNote>>>
-    export type CaptureNoteMutationBody = BodyType<CaptureInput>
-    export type CaptureNoteMutationError = ErrorType<unknown>
+    export type ExtractCaptureMutationResult = NonNullable<Awaited<ReturnType<typeof extractCapture>>>
+    export type ExtractCaptureMutationBody = BodyType<CaptureExtractInput>
+    export type ExtractCaptureMutationError = ErrorType<unknown>
 
     /**
- * @summary Capture a natural language relationship note
+ * @summary Run AI extraction on a note (voice transcript or typed) without saving it
  */
-export const useCaptureNote = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof captureNote>>, TError,{data: BodyType<CaptureInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useExtractCapture = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractCapture>>, TError,{data: BodyType<CaptureExtractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof captureNote>>,
+        Awaited<ReturnType<typeof extractCapture>>,
         TError,
-        {data: BodyType<CaptureInput>},
+        {data: BodyType<CaptureExtractInput>},
         TContext
       > => {
-      return useMutation(getCaptureNoteMutationOptions(options));
+      return useMutation(getExtractCaptureMutationOptions(options));
+    }
+
+export const getConfirmCaptureUrl = () => {
+
+
+
+
+  return `/api/capture/confirm`
+}
+
+/**
+ * @summary Save a (possibly user-edited) extracted entry
+ */
+export const confirmCapture = async (captureConfirmInput: CaptureConfirmInput, options?: Parameters<typeof customFetch>[1]): Promise<CaptureConfirmResult> => {
+
+  return customFetch<CaptureConfirmResult>(getConfirmCaptureUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(captureConfirmInput)
+  }
+);}
+
+
+
+
+
+export const getConfirmCaptureMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmCapture>>, TError,{data: BodyType<CaptureConfirmInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmCapture>>, TError,{data: BodyType<CaptureConfirmInput>}, TContext> => {
+
+const mutationKey = ['confirmCapture'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmCapture>>, {data: BodyType<CaptureConfirmInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  confirmCapture(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmCaptureMutationResult = NonNullable<Awaited<ReturnType<typeof confirmCapture>>>
+    export type ConfirmCaptureMutationBody = BodyType<CaptureConfirmInput>
+    export type ConfirmCaptureMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Save a (possibly user-edited) extracted entry
+ */
+export const useConfirmCapture = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmCapture>>, TError,{data: BodyType<CaptureConfirmInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmCapture>>,
+        TError,
+        {data: BodyType<CaptureConfirmInput>},
+        TContext
+      > => {
+      return useMutation(getConfirmCaptureMutationOptions(options));
     }
 
 export const getListReconnectsUrl = () => {

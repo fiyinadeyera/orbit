@@ -84,22 +84,7 @@ export type PersonDetail = Person & {
   connections: Connection[];
 };
 
-export interface CaptureInput {
-  /** @minLength 1 */
-  note: string;
-  /**
-     * @minimum -90
-     * @maximum 90
-     */
-  latitude?: number;
-  /**
-     * @minimum -180
-     * @maximum 180
-     */
-  longitude?: number;
-}
-
-export type CaptureResultExtracted = {
+export interface ExtractedRelationship {
   name: string;
   /** @nullable */
   company: string | null;
@@ -114,11 +99,46 @@ export type CaptureResultExtracted = {
   date: string;
   /** @nullable */
   status: string | null;
-};
+}
 
-export interface CaptureResult {
+export interface CaptureExtractInput {
+  /** @minLength 1 */
+  note: string;
+}
+
+export interface CaptureExtractResult {
+  extracted: ExtractedRelationship;
+  isExistingPerson: boolean;
+  rawNote: string;
+}
+
+export interface CaptureConfirmInput {
+  /** @minLength 1 */
+  name: string;
+  company?: string;
+  role?: string;
+  location?: string;
+  context?: string;
+  interests?: string[];
+  connectedTo?: string[];
+  status?: string;
+  date: string;
+  /** @minLength 1 */
+  rawNote: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude?: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude?: number;
+}
+
+export interface CaptureConfirmResult {
   person: Person;
-  extracted: CaptureResultExtracted;
   created: boolean;
 }
 

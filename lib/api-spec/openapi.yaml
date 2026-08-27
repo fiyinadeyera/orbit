@@ -135,24 +135,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Interaction"
-  /capture:
+  /capture/extract:
     post:
-      operationId: captureNote
+      operationId: extractCapture
       tags: [capture]
-      summary: Capture a natural language relationship note
+      summary: Run AI extraction on a note (voice transcript or typed) without saving it
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CaptureInput"
+              $ref: "#/components/schemas/CaptureExtractInput"
       responses:
         "201":
-          description: Captured person and extracted fields
+          description: Extracted relationship fields, ready for user review
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CaptureResult"
+                $ref: "#/components/schemas/CaptureExtractResult"
+  /capture/confirm:
+    post:
+      operationId: confirmCapture
+      tags: [capture]
+      summary: Save a (possibly user-edited) extracted entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureConfirmInput"
+      responses:
+        "201":
+          description: Captured person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureConfirmResult"
   /reconnects:
     get:
       operationId: listReconnects
@@ -269,35 +287,60 @@ components:
             connections:
               type: array
               items: { $ref: "#/components/schemas/Connection" }
-    CaptureInput:
+    ExtractedRelationship:
+      type: object
+      required: [name, company, role, location, interests, connectedTo, context, date, status]
+      properties:
+        name: { type: string }
+        company: { type: ["string", "null"] }
+        role: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        interests:
+          type: array
+          items: { type: string }
+        connectedTo:
+          type: array
+          items: { type: string }
+        context: { type: ["string", "null"] }
+        date: { type: string, format: date }
+        status: { type: ["string", "null"] }
+    CaptureExtractInput:
       type: object
       required: [note]
       properties:
         note: { type: string, minLength: 1 }
+    CaptureExtractResult:
+      type: object
+      required: [extracted, isExistingPerson, rawNote]
+      properties:
+        extracted: { $ref: "#/components/schemas/ExtractedRelationship" }
+        isExistingPerson: { type: boolean }
+        rawNote: { type: string }
+    CaptureConfirmInput:
+      type: object
+      required: [name, rawNote, date]
+      properties:
+        name: { type: string, minLength: 1 }
+        company: { type: string }
+        role: { type: string }
+        location: { type: string }
+        context: { type: string }
+        interests:
+          type: array
+          items: { type: string }
+        connectedTo:
+          type: array
+          items: { type: string }
+        status: { type: string }
+        date: { type: string, format: date }
+        rawNote: { type: string, minLength: 1 }
         latitude: { type: number, minimum: -90, maximum: 90 }
         longitude: { type: number, minimum: -180, maximum: 180 }
-    CaptureResult:
+    CaptureConfirmResult:
       type: object
-      required: [person, extracted, created]
+      required: [person, created]
       properties:
         person: { $ref: "#/components/schemas/Person" }
-        extracted:
-          type: object
-          required: [name, company, role, location, interests, connectedTo, context, date, status]
-          properties:
-            name: { type: string }
-            company: { type: ["string", "null"] }
-            role: { type: ["string", "null"] }
-            location: { type: ["string", "null"] }
-            interests:
-              type: array
-              items: { type: string }
-            connectedTo:
-              type: array
-              items: { type: string }
-            context: { type: ["string", "null"] }
-            date: { type: string, format: date }
-            status: { type: ["string", "null"] }
         created: { type: boolean }
     ReconnectPrompt:
       type: object

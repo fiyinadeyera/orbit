@@ -6,9 +6,19 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CaptureInput {
+export interface CaptureConfirmInput {
   /** @minLength 1 */
-  note: string;
+  name: string;
+  company?: string;
+  role?: string;
+  location?: string;
+  context?: string;
+  interests?: string[];
+  connectedTo?: string[];
+  status?: string;
+  date: Date;
+  /** @minLength 1 */
+  rawNote: string;
   /**
      * @minimum -90
      * @maximum 90
