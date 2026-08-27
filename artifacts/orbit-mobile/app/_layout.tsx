@@ -23,7 +23,13 @@ import { setBaseUrl } from '@workspace/api-client-react';
 
 // Every request the generated API hooks make goes through this base URL, so
 // this app talks to the same Orbit API server the web app already uses.
-setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+// Local dev sets EXPO_PUBLIC_API_URL directly (e.g. http://localhost:5001 in the
+// iOS Simulator, or http://<mac-lan-ip>:5001 on a physical phone). On Replit,
+// that var is unset and we fall back to the injected https domain.
+setBaseUrl(
+  process.env.EXPO_PUBLIC_API_URL ??
+    `https://${process.env.EXPO_PUBLIC_DOMAIN}`,
+);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

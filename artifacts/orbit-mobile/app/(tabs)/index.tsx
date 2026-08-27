@@ -22,7 +22,8 @@ import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollV
 import {
   getListPeopleQueryKey,
   getListReconnectsQueryKey,
-  useCaptureNote,
+  useConfirmCapture,
+  useExtractCapture,
   useListPeople,
   useListReconnects,
 } from '@workspace/api-client-react';
@@ -36,34 +37,62 @@ export default function JournalScreen() {
 
   const reconnectsQuery = useListReconnects();
   const peopleQuery = useListPeople();
-  const captureNote = useCaptureNote();
+  // Capture is a two-step API: extract runs the note through Claude, then
+  // confirm persists the (here, unedited) fields. The screen keeps a single
+  // one-tap flow by chaining them, so the UX is unchanged from the user's side.
+  const extractCapture = useExtractCapture();
+  const confirmCapture = useConfirmCapture();
+  const isCapturing = extractCapture.isPending || confirmCapture.isPending;
 
   const invalidateAfterCapture = () => {
     queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() });
     queryClient.invalidateQueries({ queryKey: getListReconnectsQueryKey() });
   };
 
+  const failCapture = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    showToast("Couldn't save that note. Try again.", 'error');
+  };
+
   const handleCapture = () => {
     const trimmed = note.trim();
-    if (!trimmed || captureNote.isPending) return;
+    if (!trimmed || isCapturing) return;
 
-    captureNote.mutate(
+    extractCapture.mutate(
       { data: { note: trimmed } },
       {
-        onSuccess: (result) => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          setNote('');
-          invalidateAfterCapture();
-          showToast(
-            result.created
-              ? `Added ${result.person.name} to your network`
-              : `Logged an update for ${result.person.name}`,
+        onSuccess: ({ extracted, rawNote }) => {
+          confirmCapture.mutate(
+            {
+              data: {
+                name: extracted.name,
+                company: extracted.company ?? undefined,
+                role: extracted.role ?? undefined,
+                location: extracted.location ?? undefined,
+                context: extracted.context ?? undefined,
+                interests: extracted.interests,
+                connectedTo: extracted.connectedTo,
+                status: extracted.status ?? undefined,
+                date: extracted.date,
+                rawNote,
+              },
+            },
+            {
+              onSuccess: (result) => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                setNote('');
+                invalidateAfterCapture();
+                showToast(
+                  result.created
+                    ? `Added ${result.person.name} to your network`
+                    : `Logged an update for ${result.person.name}`,
+                );
+              },
+              onError: failCapture,
+            },
           );
         },
-        onError: () => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-          showToast("Couldn't save that note — try again", 'error');
-        },
+        onError: failCapture,
       },
     );
   };
@@ -110,16 +139,16 @@ export default function JournalScreen() {
           />
           <Pressable
             onPress={handleCapture}
-            disabled={!note.trim() || captureNote.isPending}
+            disabled={!note.trim() || isCapturing}
             style={({ pressed }) => [
               styles.captureButton,
               {
                 backgroundColor: colors.primary,
-                opacity: !note.trim() || captureNote.isPending ? 0.5 : pressed ? 0.85 : 1,
+                opacity: !note.trim() || isCapturing ? 0.5 : pressed ? 0.85 : 1,
               },
             ]}
           >
-            {captureNote.isPending ? (
+            {isCapturing ? (
               <ActivityIndicator size="small" color={colors.primaryForeground} />
             ) : (
               <>

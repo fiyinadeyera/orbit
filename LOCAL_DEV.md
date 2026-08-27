@@ -44,11 +44,38 @@ mobile app, so set it up once.
 ## Mobile app (Expo)
 
 The mobile app lives in `artifacts/orbit-mobile` and talks to the same API.
-Point it at the API with `EXPO_PUBLIC_DOMAIN` (a host the phone can reach, e.g.
-your Mac's LAN IP or an Expo tunnel), then:
+It uses iOS 26 native tabs + liquid glass (`expo-glass-effect`,
+`expo-router/unstable-native-tabs`), so it needs a real dev build. Expo Go
+cannot run it.
+
+API URL: the app reads `EXPO_PUBLIC_API_URL` (set in
+`artifacts/orbit-mobile/.env.local`). The iOS Simulator reaches the Mac API on
+`http://localhost:5001`; a physical iPhone on the same Wi-Fi needs the Mac's LAN
+IP (e.g. `http://192.168.1.171:5001`).
+
+### Run in the iOS Simulator (recommended local path)
+
+Requires **full Xcode** (Mac App Store, ~7GB) and CocoaPods (`brew install cocoapods`).
+
 ```bash
-pnpm --filter @workspace/orbit-mobile run dev
+# 1. make sure the API is running
+./run-api.sh
+# 2. build + launch the app in the Simulator (first run also does pod install)
+pnpm --filter @workspace/orbit-mobile run ios
 ```
+
+`expo run:ios` generates the native `ios/` project, installs pods, builds, and
+boots the Simulator. Subsequent JS changes hot-reload; native/dependency changes
+need another `run ios`.
+
+### Ship to a real iPhone / the App Store (later)
+
+Needs an Expo account and an Apple Developer account ($99/yr). Use EAS:
+`eas build --profile development --platform ios` for on-device testing, then
+`eas build --profile production` + `eas submit` for the store.
+
+The Replit `dev` script (`pnpm --filter @workspace/orbit-mobile run dev`) is
+Replit-only (it depends on `REPLIT_*` env vars) and won't run locally.
 
 ## Notes
 
