@@ -77,6 +77,38 @@ Needs an Expo account and an Apple Developer account ($99/yr). Use EAS:
 The Replit `dev` script (`pnpm --filter @workspace/orbit-mobile run dev`) is
 Replit-only (it depends on `REPLIT_*` env vars) and won't run locally.
 
+## Second machine (your other Mac)
+
+The code is on GitHub and the database is on Neon, so your **data is shared
+automatically** across both Macs. Only secrets and local build artifacts need
+recreating, because they are gitignored on purpose (`.env`, `.neon`,
+`.env.local`, `ios/`).
+
+1. Prereqs: Node 24+, `npm install -g pnpm`, and for mobile: Xcode +
+   `brew install cocoapods`.
+2. Clone and install:
+   ```bash
+   git clone https://github.com/fiyinadeyera/orbit.git
+   cd orbit && pnpm install
+   ```
+3. Recreate `.env` (never committed):
+   ```bash
+   cp .env.example .env
+   # Database (same Neon project = same data as your other Mac):
+   neon auth
+   neon link --org-id org-shiny-sky-21291946 --project-id holy-shape-34186635
+   neon checkout production        # pulls DATABASE_URL into .env
+   ```
+   Then edit `.env`: set `PORT=5001` and paste your Anthropic + OpenAI keys.
+   (Fastest alternative: AirDrop the `.env` from this Mac. Never commit it.)
+4. Mobile only: create `artifacts/orbit-mobile/.env.local` with
+   `EXPO_PUBLIC_API_URL=http://localhost:5001`.
+5. Run: `./run-api.sh`, and for mobile
+   `LANG=en_US.UTF-8 pnpm exec expo run:ios --device "iPhone 17 Pro"`.
+
+Two-machine git hygiene: `git pull` before you start working, and push when you
+finish, so the two clones do not drift.
+
 ## Notes
 
 - Replit-specific config (`.replit`, Replit Vite plugins) is kept but auto-
