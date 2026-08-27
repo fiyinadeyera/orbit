@@ -232,7 +232,8 @@ export const ConfirmCaptureBody = zod.object({
   "date": zod.coerce.date(),
   "rawNote": zod.string().min(1),
   "latitude": zod.number().min(confirmCaptureBodyLatitudeMin).max(confirmCaptureBodyLatitudeMax).optional(),
-  "longitude": zod.number().min(confirmCaptureBodyLongitudeMin).max(confirmCaptureBodyLongitudeMax).optional()
+  "longitude": zod.number().min(confirmCaptureBodyLongitudeMin).max(confirmCaptureBodyLongitudeMax).optional(),
+  "forceNew": zod.boolean().optional().describe('When true, always save this as a brand-new person even if the name matches an existing contact, instead of merging into them.')
 })
 
 export const ConfirmCaptureResponse = zod.object({

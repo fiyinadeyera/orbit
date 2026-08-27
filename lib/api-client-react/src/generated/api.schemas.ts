@@ -135,6 +135,8 @@ export interface CaptureConfirmInput {
      * @maximum 180
      */
   longitude?: number;
+  /** When true, always save this as a brand-new person even if the name matches an existing contact, instead of merging into them. */
+  forceNew?: boolean;
 }
 
 export interface CaptureConfirmResult {

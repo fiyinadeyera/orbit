@@ -64,7 +64,7 @@ function personValues(
 }
 
 router.get("/people", async (req, res): Promise<void> => {
-  const parsed = CreatePersonBody.safeParse(req.body);
+  const parsed = ListPeopleQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -90,39 +90,38 @@ router.post("/people", async (req, res): Promise<void> => {
     return;
   }
 
-  const values = {
-    company: data.company ?? null,
-    role: data.role ?? null,
-    location,
-    howMet: data.context ?? null,
-    notes,
-    tags: data.interests ?? [],
-    lastContacted: date,
-  };
+  const values = personValues(parsed.data);
   // If the user didn't pick a date, assume "today" — the day the entry was
   // made is the most reasonable default for when they met this person.
   const dateMet = values.dateMet ?? isoDate(new Date());
   const [person] = await db
-    .select({ id: peopleTable.id })
-    .from(peopleTable)
-    .where(eq(peopleTable.id, params.data.id));
-  if (!person) {
-    res.status(404).json({ error: "Person not found." });
-    return;
-  }
+    .insert(peopleTable)
+    .values({
+      id: randomUUID(),
+      name: values.name!,
+      company: values.company,
+      role: values.role,
+      location: values.location,
+      howMet: values.howMet,
+      dateMet,
+      notes: values.notes,
+      tags: values.tags ?? [],
+      lastContacted: dateMet,
+    })
+    .returning();
 
-  res.sendStatus(204);
+  res.status(201).json(CreatePersonResponse.parse(personResponse(person)));
 });
 
-router.post("/people/:id/interactions", async (req, res): Promise<void> => {
-  const params = CreateInteractionParams.safeParse(req.params);
+router.get("/people/:id", async (req, res): Promise<void> => {
+  const params = GetPersonParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
   const [person] = await db
-    .select({ id: peopleTable.id })
+    .select()
     .from(peopleTable)
     .where(eq(peopleTable.id, params.data.id));
   if (!person) {
@@ -157,8 +156,8 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
 });
 
 router.patch("/people/:id", async (req, res): Promise<void> => {
-  const params = CreateInteractionParams.safeParse(req.params);
-  const body = ConfirmCaptureBody.safeParse(req.body);
+  const params = UpdatePersonParams.safeParse(req.params);
+  const body = UpdatePersonBody.safeParse(req.body);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
@@ -168,29 +167,22 @@ router.patch("/people/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const values = {
-    company: data.company ?? null,
-    role: data.role ?? null,
-    location,
-    howMet: data.context ?? null,
-    notes,
-    tags: data.interests ?? [],
-    lastContacted: date,
-  };
+  const values = personValues(body.data);
   const [person] = await db
-    .select({ id: peopleTable.id })
-    .from(peopleTable)
-    .where(eq(peopleTable.id, params.data.id));
+    .update(peopleTable)
+    .set(values)
+    .where(eq(peopleTable.id, params.data.id))
+    .returning();
   if (!person) {
     res.status(404).json({ error: "Person not found." });
     return;
   }
 
-  res.sendStatus(204);
+  res.json(UpdatePersonResponse.parse(personResponse(person)));
 });
 
-router.post("/people/:id/interactions", async (req, res): Promise<void> => {
-  const params = CreateInteractionParams.safeParse(req.params);
+router.delete("/people/:id", async (req, res): Promise<void> => {
+  const params = DeletePersonParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
@@ -205,12 +197,14 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
     return;
   }
 
+  await db.delete(peopleTable).where(eq(peopleTable.id, person.id));
+
   res.sendStatus(204);
 });
 
 router.post("/people/:id/interactions", async (req, res): Promise<void> => {
   const params = CreateInteractionParams.safeParse(req.params);
-  const body = ConfirmCaptureBody.safeParse(req.body);
+  const body = CreateInteractionBody.safeParse(req.body);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
@@ -236,7 +230,7 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
       personId: person.id,
       date: isoDate(body.data.date),
       summary: body.data.summary,
-      rawNote: body.data.rawNote,
+      rawNote: body.data.rawNote ?? null,
     })
     .returning();
   await db
@@ -251,7 +245,7 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
 // caller (voice or typed entry) shows the result for the user to review and
 // edit before it's saved via /capture/confirm.
 router.post("/capture/extract", async (req, res): Promise<void> => {
-  const body = ConfirmCaptureBody.safeParse(req.body);
+  const body = ExtractCaptureBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
     return;
@@ -259,10 +253,14 @@ router.post("/capture/extract", async (req, res): Promise<void> => {
 
   try {
     const extracted = await extractRelationship(body.data.note);
-  const [existing] = await db
-    .select()
-    .from(peopleTable)
-    .where(eq(peopleTable.name, data.name));
+    // Matched by exact name — if two different people share a name (e.g.
+    // two "John Smith"s), this will look like an existing match even
+    // though it isn't. The review screen surfaces `isExistingPerson` so
+    // the user can catch that before it merges into the wrong profile.
+    const [existing] = await db
+      .select()
+      .from(peopleTable)
+      .where(eq(peopleTable.name, extracted.name));
 
     res.status(201).json(
       ExtractCaptureResponse.parse({
@@ -288,10 +286,12 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
   }
   const data = body.data;
 
-  const [existing] = await db
-    .select()
-    .from(peopleTable)
-    .where(eq(peopleTable.name, data.name));
+  // Unless the user explicitly asked to save this as a distinct new
+  // person (because the name match was a false positive), merge into the
+  // existing contact with this exact name.
+  const [existing] = data.forceNew
+    ? []
+    : await db.select().from(peopleTable).where(eq(peopleTable.name, data.name));
   const notes = [data.status, data.context].filter(Boolean).join(" — ") || null;
   const date = isoDate(data.date);
 

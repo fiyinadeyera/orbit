@@ -336,6 +336,11 @@ components:
         rawNote: { type: string, minLength: 1 }
         latitude: { type: number, minimum: -90, maximum: 90 }
         longitude: { type: number, minimum: -180, maximum: 180 }
+        forceNew:
+          type: boolean
+          description: >-
+            When true, always save this as a brand-new person even if the
+            name matches an existing contact, instead of merging into them.
     CaptureConfirmResult:
       type: object
       required: [person, created]

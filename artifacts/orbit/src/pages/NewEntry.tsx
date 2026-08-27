@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   useExtractCapture,
   useConfirmCapture,
+  useListPeople,
   getListPeopleQueryKey,
   getListReconnectsQueryKey,
 } from '@workspace/api-client-react';
@@ -14,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { getCurrentCoordinates, type Coordinates } from '@/lib/utils';
-import { Mic, Square, X, Keyboard, Sparkles, Check, Loader2 } from 'lucide-react';
+import { Mic, Square, X, Keyboard, Sparkles, Check, Loader2, UserCheck, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Stage = 'idle' | 'recording' | 'typing' | 'processing' | 'review';
@@ -68,6 +69,7 @@ export default function NewEntry() {
   const [rawNote, setRawNote] = useState('');
   const [review, setReview] = useState<ReviewFields>(emptyReview);
   const [entryDate, setEntryDate] = useState<string>('');
+  const [saveAsNewPerson, setSaveAsNewPerson] = useState(false);
   const [duration, setDuration] = useState(0);
   const coordsRef = useRef<Coordinates | undefined>(undefined);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -77,6 +79,25 @@ export default function NewEntry() {
   const recorder = useVoiceRecorder();
   const extractMutation = useExtractCapture();
   const confirmMutation = useConfirmCapture();
+  // Kept fresh independent of the extraction result so the "existing
+  // contact" warning stays accurate even after the user edits the name on
+  // the review screen — the AI's original guess (based on the transcribed
+  // name) can otherwise go stale the moment the name field changes.
+  const { data: people } = useListPeople();
+  const trimmedName = review.name.trim();
+  const matchedPerson = trimmedName
+    ? people?.find((person) => person.name === trimmedName)
+    : undefined;
+  const isExistingPerson = Boolean(matchedPerson);
+
+  // If the matched contact changes (including changing to/from "no match")
+  // because the user edited the name, drop any earlier "save as new"
+  // choice — it was a decision about a different match and shouldn't
+  // silently carry over.
+  const matchedPersonId = matchedPerson?.id;
+  useEffect(() => {
+    setSaveAsNewPerson(false);
+  }, [matchedPersonId]);
 
   useEffect(() => {
     return () => {
@@ -91,6 +112,7 @@ export default function NewEntry() {
     setTypedNote('');
     setRawNote('');
     setReview(emptyReview);
+    setSaveAsNewPerson(false);
     coordsRef.current = undefined;
   };
 
@@ -113,6 +135,7 @@ export default function NewEntry() {
             connectedTo: (e.connectedTo ?? []).join(', '),
           });
           setEntryDate(e.date);
+          setSaveAsNewPerson(false);
           setStage('review');
         },
         onError: () => {
@@ -197,6 +220,7 @@ export default function NewEntry() {
           connectedTo: splitList(review.connectedTo),
           date: entryDate,
           rawNote,
+          forceNew: isExistingPerson && saveAsNewPerson,
           ...coordsRef.current,
         },
       },
@@ -232,6 +256,44 @@ export default function NewEntry() {
             Orbit pulled out these details — edit anything that's off.
           </p>
         </div>
+
+        {isExistingPerson && (
+          <Card className={saveAsNewPerson ? 'border-dashed' : 'border-primary/40 bg-primary/5'}>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex gap-3">
+                {saveAsNewPerson ? (
+                  <UserPlus className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                ) : (
+                  <UserCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                )}
+                <div className="text-sm">
+                  {saveAsNewPerson ? (
+                    <p className="text-foreground">
+                      This will be saved as a <span className="font-medium">new, separate contact</span> named{' '}
+                      {review.name || 'this person'}, even though someone with that name already exists.
+                    </p>
+                  ) : (
+                    <p className="text-foreground">
+                      This will be added to your existing contact:{' '}
+                      <span className="font-medium">{review.name || 'this person'}</span>.
+                    </p>
+                  )}
+                  <p className="text-muted-foreground mt-1">
+                    Not the same person? You can save this as a distinct contact instead.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSaveAsNewPerson((v) => !v)}
+              >
+                {saveAsNewPerson ? 'Actually, merge with the existing contact' : "This is a different person — save as new"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="bg-muted/40 border-dashed">
           <CardContent className="p-4 text-sm text-muted-foreground italic leading-relaxed">
