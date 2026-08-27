@@ -103,6 +103,9 @@ importers:
       '@workspace/integrations-openai-ai-server':
         specifier: workspace:*
         version: link:../../lib/integrations-openai-ai-server
+      '@workspace/intro-engine':
+        specifier: workspace:*
+        version: link:../../lib/intro-engine
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -809,6 +812,8 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.5
+
+  lib/intro-engine: {}
 
   scripts:
     devDependencies:

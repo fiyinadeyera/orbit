@@ -197,6 +197,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Graph"
+  /intros:
+    get:
+      operationId: listIntros
+      tags: [network]
+      summary: Suggested introductions to make across the network
+      responses:
+        "200":
+          description: Ranked introduction suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IntroSuggestion"
 components:
   schemas:
     HealthStatus:
@@ -354,6 +368,23 @@ components:
         person: { $ref: "#/components/schemas/Person" }
         daysSinceContact: { type: number, minimum: 0 }
         lastInteraction: { type: ["string", "null"] }
+    IntroParty:
+      type: object
+      required: [id, name, role, company]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: ["string", "null"] }
+        company: { type: ["string", "null"] }
+    IntroSuggestion:
+      type: object
+      required: [personA, personB, score, rationale, draftIntro]
+      properties:
+        personA: { $ref: "#/components/schemas/IntroParty" }
+        personB: { $ref: "#/components/schemas/IntroParty" }
+        score: { type: number, minimum: 0, maximum: 100 }
+        rationale: { type: string }
+        draftIntro: { type: string }
     Graph:
       type: object
       required: [nodes, edges]

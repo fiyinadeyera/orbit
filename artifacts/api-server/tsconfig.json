@@ -13,6 +13,9 @@
       "path": "../../lib/db"
     },
     {
+      "path": "../../lib/intro-engine"
+    },
+    {
       "path": "../../lib/api-zod"
     },
     {

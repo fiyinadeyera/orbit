@@ -17,6 +17,8 @@ export * from './graphNodesItem';
 export * from './healthStatus';
 export * from './interaction';
 export * from './interactionInput';
+export * from './introParty';
+export * from './introSuggestion';
 export * from './listPeopleParams';
 export * from './person';
 export * from './personDetail';

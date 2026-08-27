@@ -302,3 +302,31 @@ export const GetGraphResponse = zod.object({
 })
 
 
+/**
+ * @summary Suggested introductions to make across the network
+ */
+export const listIntrosResponseScoreMin = 0;
+export const listIntrosResponseScoreMax = 100;
+
+
+
+export const ListIntrosResponseItem = zod.object({
+  "personA": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string().nullable(),
+  "company": zod.string().nullable()
+}),
+  "personB": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string().nullable(),
+  "company": zod.string().nullable()
+}),
+  "score": zod.number().min(listIntrosResponseScoreMin).max(listIntrosResponseScoreMax),
+  "rationale": zod.string(),
+  "draftIntro": zod.string()
+})
+export const ListIntrosResponse = zod.array(ListIntrosResponseItem)
+
+

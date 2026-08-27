@@ -27,6 +27,8 @@ Orbit is a relationship-intelligence journal: capture natural-language notes abo
 ## Where things live
 
 - `artifacts/api-server/src/routes/orbit.ts` — all `/api/people`, `/api/capture`, `/api/reconnects`, `/api/graph` routes; source of truth for backend behavior (NLP note extraction, reconnect threshold, graph nodes/edges).
+- `lib/intro-engine/` — `@workspace/intro-engine`: a source-agnostic introduction-matching engine. Pure TS, zero runtime deps; takes a normalized `Contact[]` + existing connections + an injected `complete(prompt)` LLM function, returns ranked `IntroSuggestion[]` (likely-mutual-value score, rationale, draft intro). Knows nothing about Orbit/HTTP/DB, so it can later run over other corpora (email/Slack/LinkedIn) or its own service with no rewrite.
+- `artifacts/api-server/src/routes/intros.ts` — `GET /api/intros`: maps Orbit people/connections into the engine's shape (`lib/intro-mapping.ts`), scores them via Claude (`lib/claude.ts` — same Anthropic integration as extraction), returns suggestions. Read-only; suggests intros, does not create connections.
 - `lib/api-spec/openapi.yaml` — the OpenAPI contract both the web and mobile clients are generated from.
 - `artifacts/orbit/src/` — web app (wouter router, pages: Home/People/PersonDetail/Graph, `Shell.tsx` nav, `index.css` theme tokens = source of truth for brand palette/fonts/radius).
 - `artifacts/orbit-mobile/` — Expo companion app. `constants/colors.ts` mirrors the web app's HSL tokens (converted to hex); `app/(tabs)/` holds the 3 tabs (Journal/People/Network); `app/person/[id].tsx` is the pushed detail screen; `app/person-form.tsx` is the add/edit `formSheet`.
@@ -42,6 +44,7 @@ Orbit is a relationship-intelligence journal: capture natural-language notes abo
 - **Capture**: free-text notes are parsed to extract a person's name/role/company/location/interests and mentioned connections, then upserted.
 - **People**: searchable directory with manual add/edit/delete, tags, and full interaction history per person.
 - **Reconnects**: surfaces people who haven't been contacted in 30+ days.
+- **Intros**: proactively suggests high-mutual-value introductions to make across the network (the "luck surface area" layer), scored and drafted by `@workspace/intro-engine`. Surfaced on the web app's `/intros` tab. Quality scales with how much each person's goals / "looking for" is captured (currently folded into `notes` at capture time, not a first-class field).
 - **Network graph**: visualizes people as nodes and inferred connections as edges.
 - Available on web (`artifacts/orbit`) and as a native iPhone/Android app via Expo (`artifacts/orbit-mobile`), both backed by the same API.
 

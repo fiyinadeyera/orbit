@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
-import { Mic, Users, Network, Search } from 'lucide-react';
+import { Mic, Users, Network, Sparkles, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'New Entry', icon: Mic },
   { href: '/people', label: 'People', icon: Users },
   { href: '/graph', label: 'Network Map', icon: Network },
+  { href: '/intros', label: 'Intros', icon: Sparkles },
   { href: '/search', label: 'Search', icon: Search },
 ];
 

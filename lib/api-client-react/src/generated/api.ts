@@ -28,6 +28,7 @@ import type {
   HealthStatus,
   Interaction,
   InteractionInput,
+  IntroSuggestion,
   ListPeopleParams,
   Person,
   PersonDetail,
@@ -872,6 +873,83 @@ export function useGetGraph<TData = Awaited<ReturnType<typeof getGraph>>, TError
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGraphQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListIntrosUrl = () => {
+
+
+
+
+  return `/api/intros`
+}
+
+/**
+ * @summary Suggested introductions to make across the network
+ */
+export const listIntros = async ( options?: Parameters<typeof customFetch>[1]): Promise<IntroSuggestion[]> => {
+
+  return customFetch<IntroSuggestion[]>(getListIntrosUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListIntrosQueryKey = () => {
+    return [
+    `/api/intros`
+    ] as const;
+    }
+
+
+export const getListIntrosQueryOptions = <TData = Awaited<ReturnType<typeof listIntros>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIntros>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListIntrosQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listIntros>>> = ({ signal }) => listIntros({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listIntros>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListIntrosQueryResult = NonNullable<Awaited<ReturnType<typeof listIntros>>>
+export type ListIntrosQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Suggested introductions to make across the network
+ */
+
+export function useListIntros<TData = Awaited<ReturnType<typeof listIntros>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIntros>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListIntrosQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

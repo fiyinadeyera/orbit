@@ -152,6 +152,27 @@ export interface ReconnectPrompt {
   lastInteraction: string | null;
 }
 
+export interface IntroParty {
+  id: string;
+  name: string;
+  /** @nullable */
+  role: string | null;
+  /** @nullable */
+  company: string | null;
+}
+
+export interface IntroSuggestion {
+  personA: IntroParty;
+  personB: IntroParty;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+  rationale: string;
+  draftIntro: string;
+}
+
 export type GraphNodesItem = {
   id: string;
   name: string;
