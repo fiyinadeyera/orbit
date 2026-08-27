@@ -72,6 +72,19 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // Local dev only: the API server runs on a separate origin, so proxy /api to it.
+    // On Replit the router serves /api under the same origin, so skip the proxy there.
+    ...(process.env.REPL_ID === undefined
+      ? {
+          proxy: {
+            '/api': {
+              target:
+                process.env.API_PROXY_TARGET ?? 'http://localhost:5000',
+              changeOrigin: true,
+            },
+          },
+        }
+      : {}),
   },
   preview: {
     port,
