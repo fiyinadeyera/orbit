@@ -14,7 +14,8 @@
       "backgroundColor": "#f8f6f1"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.anonymous.orbit-mobile"
     },
     "android": {},
     "web": {
