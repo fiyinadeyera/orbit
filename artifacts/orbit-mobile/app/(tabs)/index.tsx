@@ -400,9 +400,9 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontFamily: 'Inter_500Medium',
-    fontSize: 12.5,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
+    fontSize: 14,
+    letterSpacing: 0.1,
+    marginTop: 1,
   },
   voiceHero: {
     alignItems: 'center',
