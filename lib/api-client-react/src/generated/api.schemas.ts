@@ -25,6 +25,8 @@ export interface Person {
   /** @nullable */
   notes: string | null;
   /** @nullable */
+  lookingFor: string | null;
+  /** @nullable */
   lastContacted: string | null;
   tags: string[];
   createdAt: string;
@@ -39,6 +41,7 @@ export interface PersonInput {
   howMet?: string;
   dateMet?: string;
   notes?: string;
+  lookingFor?: string;
   tags?: string[];
 }
 
@@ -51,6 +54,7 @@ export interface PersonUpdate {
   howMet?: string;
   dateMet?: string;
   notes?: string;
+  lookingFor?: string;
   tags?: string[];
 }
 

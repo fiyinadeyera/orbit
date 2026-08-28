@@ -22,6 +22,8 @@ export interface Person {
   /** @nullable */
   notes: string | null;
   /** @nullable */
+  lookingFor: string | null;
+  /** @nullable */
   lastContacted: Date | null;
   tags: string[];
   createdAt: Date;

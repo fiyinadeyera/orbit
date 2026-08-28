@@ -18,6 +18,10 @@ export const peopleTable = pgTable("people", {
   howMet: text("how_met"),
   dateMet: date("date_met", { mode: "string" }),
   notes: text("notes"),
+  // What this person is actively after (hiring, fundraising, a mentor, ...).
+  // Kept as its own field, not folded into notes, so the intro engine can
+  // reason over goals directly.
+  lookingFor: text("looking_for"),
   lastContacted: date("last_contacted", { mode: "string" }),
   tags: text("tags").array().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -240,7 +240,7 @@ components:
         - status
     Person:
       type: object
-      required: [id, name, company, role, location, howMet, dateMet, notes, lastContacted, tags, createdAt]
+      required: [id, name, company, role, location, howMet, dateMet, notes, lookingFor, lastContacted, tags, createdAt]
       properties:
         id: { type: string }
         name: { type: string }
@@ -250,6 +250,7 @@ components:
         howMet: { type: ["string", "null"] }
         dateMet: { type: ["string", "null"], format: date }
         notes: { type: ["string", "null"] }
+        lookingFor: { type: ["string", "null"] }
         lastContacted: { type: ["string", "null"], format: date }
         tags:
           type: array
@@ -266,6 +267,7 @@ components:
         howMet: { type: string }
         dateMet: { type: string, format: date }
         notes: { type: string }
+        lookingFor: { type: string }
         tags:
           type: array
           items: { type: string }
@@ -279,6 +281,7 @@ components:
         howMet: { type: string }
         dateMet: { type: string, format: date }
         notes: { type: string }
+        lookingFor: { type: string }
         tags:
           type: array
           items: { type: string }

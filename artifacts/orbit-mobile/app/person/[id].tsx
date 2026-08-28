@@ -174,9 +174,15 @@ export default function PersonDetailScreen() {
           </View>
         ) : null}
 
-        {(person.howMet || person.notes || person.dateMet) && (
+        {(person.howMet || person.notes || person.dateMet || person.lookingFor) && (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>Context</Text>
+            {person.lookingFor ? (
+              <Text style={[styles.cardText, { color: colors.mutedForeground }]}>
+                <Text style={{ color: colors.foreground }}>Looking for: </Text>
+                {person.lookingFor}
+              </Text>
+            ) : null}
             {person.howMet ? (
               <Text style={[styles.cardText, { color: colors.mutedForeground }]}>
                 <Text style={{ color: colors.foreground }}>How you met: </Text>

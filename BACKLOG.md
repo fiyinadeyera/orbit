@@ -39,7 +39,7 @@ Status = where Orbit is today. Bucket = priority for the "shippable free app" mi
 | Basic analytics (activation + return funnel) | Missing | Should |
 | Reminders / follow-ups | Missing | Should |
 | Network import: contacts (done) → LinkedIn (done) → Google (scaffolded) → calendar → email | Contacts + LinkedIn shipped; Google awaiting OAuth setup | Should |
-| "Looking for" as a first-class field | Missing | Should |
+| "Looking for" as a first-class field | Done | Should |
 | Scheduled in-app Intros digest | Missing | Could |
 | Auto-enrichment / overnight research | Missing | Could |
 | Search / filter polish | Partial | Could |
@@ -124,8 +124,10 @@ Instrument the core-loop events: person captured, graph opened, returned next da
        privacy-review magnet). Earn it after the cheap sources prove useful.
   Capture stays the layer that adds the private context no source knows
   ("Daniel introduced me to Sarah; she's raising a seed round").
-- **"Looking for" first-class field**: capture goals/needs as structured data
-  instead of folding into notes. Small change, measurably better intros.
+- **"Looking for" first-class field** — DONE. Added a `people.looking_for` column;
+  capture now stores the "looking for" status there (notes hold context only),
+  it's editable in the web + mobile person forms and shown on detail, and the
+  intro engine reads it directly instead of guessing from notes.
 
 ## COULD — nice, not necessary
 

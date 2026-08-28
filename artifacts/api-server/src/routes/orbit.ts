@@ -54,6 +54,7 @@ function personValues(
     howMet?: string;
     dateMet?: Date;
     notes?: string;
+    lookingFor?: string;
     tags?: string[];
   },
 ) {
@@ -105,6 +106,7 @@ router.post("/people", async (req, res): Promise<void> => {
       howMet: values.howMet,
       dateMet,
       notes: values.notes,
+      lookingFor: values.lookingFor,
       tags: values.tags ?? [],
       lastContacted: dateMet,
     })
@@ -292,7 +294,8 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
   const [existing] = data.forceNew
     ? []
     : await db.select().from(peopleTable).where(eq(peopleTable.name, data.name));
-  const notes = [data.status, data.context].filter(Boolean).join(" — ") || null;
+  // "Looking for" is its own field now; notes hold the free-text context only.
+  const notes = data.context || null;
   const date = isoDate(data.date);
 
   // Prefer a location the user confirmed (mentioned in the note or typed
@@ -315,6 +318,7 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
     location,
     howMet: data.context ?? null,
     notes,
+    lookingFor: data.status ?? null,
     tags: data.interests ?? [],
     lastContacted: date,
   };

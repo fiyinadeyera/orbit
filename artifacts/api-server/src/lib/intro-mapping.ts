@@ -8,11 +8,7 @@ function daysSince(date: string | null): number | null {
   );
 }
 
-/**
- * Map an Orbit person into the engine's source-agnostic `Contact`. "Looking
- * for" isn't its own column in Orbit — capture folds it into `notes` — so we
- * leave `lookingFor` null and let the engine read goals out of `notes`.
- */
+/** Map an Orbit person into the engine's source-agnostic `Contact`. */
 export function personToContact(person: Person): Contact {
   return {
     id: person.id,
@@ -21,7 +17,7 @@ export function personToContact(person: Person): Contact {
     company: person.company,
     location: person.location,
     interests: person.tags ?? [],
-    lookingFor: null,
+    lookingFor: person.lookingFor,
     notes: person.notes,
     lastContactedDaysAgo: daysSince(person.lastContacted),
   };

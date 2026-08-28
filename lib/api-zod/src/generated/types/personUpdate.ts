@@ -15,5 +15,6 @@ export interface PersonUpdate {
   howMet?: string;
   dateMet?: Date;
   notes?: string;
+  lookingFor?: string;
   tags?: string[];
 }

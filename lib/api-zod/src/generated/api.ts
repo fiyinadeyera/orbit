@@ -33,6 +33,7 @@ export const ListPeopleResponseItem = zod.object({
   "howMet": zod.string().nullable(),
   "dateMet": zod.coerce.date().nullable(),
   "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
@@ -54,6 +55,7 @@ export const CreatePersonBody = zod.object({
   "howMet": zod.string().optional(),
   "dateMet": zod.coerce.date().optional(),
   "notes": zod.string().optional(),
+  "lookingFor": zod.string().optional(),
   "tags": zod.array(zod.string()).optional()
 })
 
@@ -66,6 +68,7 @@ export const CreatePersonResponse = zod.object({
   "howMet": zod.string().nullable(),
   "dateMet": zod.coerce.date().nullable(),
   "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
@@ -88,6 +91,7 @@ export const GetPersonResponse = zod.object({
   "howMet": zod.string().nullable(),
   "dateMet": zod.coerce.date().nullable(),
   "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
@@ -127,6 +131,7 @@ export const UpdatePersonBody = zod.object({
   "howMet": zod.string().optional(),
   "dateMet": zod.coerce.date().optional(),
   "notes": zod.string().optional(),
+  "lookingFor": zod.string().optional(),
   "tags": zod.array(zod.string()).optional()
 })
 
@@ -139,6 +144,7 @@ export const UpdatePersonResponse = zod.object({
   "howMet": zod.string().nullable(),
   "dateMet": zod.coerce.date().nullable(),
   "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
@@ -246,6 +252,7 @@ export const ConfirmCaptureResponse = zod.object({
   "howMet": zod.string().nullable(),
   "dateMet": zod.coerce.date().nullable(),
   "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
@@ -288,6 +295,7 @@ export const ImportContactsResponse = zod.object({
   "howMet": zod.string().nullable(),
   "dateMet": zod.coerce.date().nullable(),
   "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
@@ -312,6 +320,7 @@ export const ListReconnectsResponseItem = zod.object({
   "howMet": zod.string().nullable(),
   "dateMet": zod.coerce.date().nullable(),
   "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()

@@ -38,6 +38,7 @@ export default function PersonFormScreen() {
   const [company, setCompany] = useState('');
   const [location, setLocation] = useState('');
   const [howMet, setHowMet] = useState('');
+  const [lookingFor, setLookingFor] = useState('');
   const [tags, setTags] = useState('');
   const [notes, setNotes] = useState('');
   const [hydrated, setHydrated] = useState(false);
@@ -50,6 +51,7 @@ export default function PersonFormScreen() {
       setCompany(person.company ?? '');
       setLocation(person.location ?? '');
       setHowMet(person.howMet ?? '');
+      setLookingFor(person.lookingFor ?? '');
       setTags(person.tags.join(', '));
       setNotes(person.notes ?? '');
       setHydrated(true);
@@ -66,6 +68,7 @@ export default function PersonFormScreen() {
       company: company.trim() || undefined,
       location: location.trim() || undefined,
       howMet: howMet.trim() || undefined,
+      lookingFor: lookingFor.trim() || undefined,
       notes: notes.trim() || undefined,
       tags: tags
         .split(',')
@@ -150,6 +153,12 @@ export default function PersonFormScreen() {
             value={howMet}
             onChangeText={setHowMet}
             placeholder="Introduced by a mutual friend"
+          />
+          <TextField
+            label="Looking for"
+            value={lookingFor}
+            onChangeText={setLookingFor}
+            placeholder="Hiring designers, raising a seed round"
           />
           <TextField
             label="Tags"

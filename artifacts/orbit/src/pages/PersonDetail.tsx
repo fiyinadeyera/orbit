@@ -63,6 +63,7 @@ export default function PersonDetail() {
       role: formData.get('role') as string || undefined,
       location: formData.get('location') as string || undefined,
       howMet: formData.get('howMet') as string || undefined,
+      lookingFor: formData.get('lookingFor') as string || undefined,
       notes: formData.get('notes') as string || undefined,
       tags: (formData.get('tags') as string).split(',').map(t => t.trim()).filter(Boolean)
     };
@@ -174,6 +175,10 @@ export default function PersonDetail() {
                   <Input name="howMet" defaultValue={person.howMet || ''} />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-sm font-medium">Looking for</label>
+                  <Input name="lookingFor" defaultValue={person.lookingFor || ''} placeholder="e.g. hiring designers, raising a seed round" />
+                </div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium">Tags (comma separated)</label>
                   <Input name="tags" defaultValue={person.tags?.join(', ') || ''} />
                 </div>
@@ -207,6 +212,12 @@ export default function PersonDetail() {
                   <p className="text-sm leading-relaxed">{person.howMet}</p>
                 </div>
               )}
+              {person.lookingFor && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Looking for</h4>
+                  <p className="text-sm leading-relaxed">{person.lookingFor}</p>
+                </div>
+              )}
               {person.dateMet && (
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Date met</h4>
@@ -219,7 +230,7 @@ export default function PersonDetail() {
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{person.notes}</p>
                 </div>
               )}
-              {!person.howMet && !person.dateMet && !person.notes && (
+              {!person.howMet && !person.dateMet && !person.notes && !person.lookingFor && (
                 <p className="text-sm text-muted-foreground italic">No background context added.</p>
               )}
             </CardContent>
