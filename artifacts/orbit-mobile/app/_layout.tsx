@@ -57,6 +57,10 @@ function RootLayoutNav() {
           sheetGrabberVisible: true,
         }}
       />
+      <Stack.Screen
+        name="import-contacts"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
     </Stack>
   );
 }

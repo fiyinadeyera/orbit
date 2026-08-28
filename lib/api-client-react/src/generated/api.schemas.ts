@@ -152,6 +152,26 @@ export interface ReconnectPrompt {
   lastInteraction: string | null;
 }
 
+export interface ImportContact {
+  /** @minLength 1 */
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+}
+
+export interface ImportContactsInput {
+  contacts: ImportContact[];
+}
+
+export interface ImportContactsResult {
+  /** @minimum 0 */
+  imported: number;
+  /** @minimum 0 */
+  skipped: number;
+  people: Person[];
+}
+
 export interface IntroParty {
   id: string;
   name: string;

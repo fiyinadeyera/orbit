@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { EmptyState } from '@/components/EmptyState';
@@ -35,15 +35,27 @@ export default function PeopleScreen() {
               {people.length} {people.length === 1 ? 'connection' : 'connections'}
             </Text>
           </View>
-          <Pressable
-            onPress={() => router.push('/person-form')}
-            style={({ pressed }) => [
-              styles.addButton,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
-            ]}
-          >
-            <Feather name="plus" size={20} color={colors.primaryForeground} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => router.push('/import-contacts' as Href)}
+              style={({ pressed }) => [
+                styles.iconButton,
+                { backgroundColor: colors.secondary, opacity: pressed ? 0.85 : 1 },
+              ]}
+              accessibilityLabel="Import contacts"
+            >
+              <Feather name="download" size={18} color={colors.primary} />
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/person-form')}
+              style={({ pressed }) => [
+                styles.addButton,
+                { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Feather name="plus" size={20} color={colors.primaryForeground} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -91,7 +103,7 @@ export default function PeopleScreen() {
               description={
                 search
                   ? 'Try a different name, role, or company.'
-                  : 'Tap the + button to add your first connection.'
+                  : 'Import your phone contacts, or tap + to add someone yourself.'
               }
             />
           }
@@ -120,6 +132,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
     marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addButton: {
     width: 40,

@@ -26,6 +26,8 @@ import type {
   CaptureExtractResult,
   Graph,
   HealthStatus,
+  ImportContactsInput,
+  ImportContactsResult,
   Interaction,
   InteractionInput,
   IntroSuggestion,
@@ -729,6 +731,77 @@ export const useConfirmCapture = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getConfirmCaptureMutationOptions(options));
+    }
+
+export const getImportContactsUrl = () => {
+
+
+
+
+  return `/api/people/import`
+}
+
+/**
+ * @summary Bulk-import contacts into the network, skipping duplicates by name
+ */
+export const importContacts = async (importContactsInput: ImportContactsInput, options?: Parameters<typeof customFetch>[1]): Promise<ImportContactsResult> => {
+
+  return customFetch<ImportContactsResult>(getImportContactsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(importContactsInput)
+  }
+);}
+
+
+
+
+
+export const getImportContactsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importContacts>>, TError,{data: BodyType<ImportContactsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importContacts>>, TError,{data: BodyType<ImportContactsInput>}, TContext> => {
+
+const mutationKey = ['importContacts'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importContacts>>, {data: BodyType<ImportContactsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  importContacts(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportContactsMutationResult = NonNullable<Awaited<ReturnType<typeof importContacts>>>
+    export type ImportContactsMutationBody = BodyType<ImportContactsInput>
+    export type ImportContactsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Bulk-import contacts into the network, skipping duplicates by name
+ */
+export const useImportContacts = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importContacts>>, TError,{data: BodyType<ImportContactsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importContacts>>,
+        TError,
+        {data: BodyType<ImportContactsInput>},
+        TContext
+      > => {
+      return useMutation(getImportContactsMutationOptions(options));
     }
 
 export const getListReconnectsUrl = () => {

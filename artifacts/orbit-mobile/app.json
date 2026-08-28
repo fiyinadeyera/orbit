@@ -35,6 +35,12 @@
         {
           "microphonePermission": "Orbit uses the microphone so you can capture a note by voice."
         }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Orbit uses your contacts so you can choose people to add to your network."
+        }
       ]
     ],
     "experiments": {

@@ -38,7 +38,7 @@ Status = where Orbit is today. Bucket = priority for the "shippable free app" mi
 | Error / empty / loading states (full sweep) | Partial | Must |
 | Basic analytics (activation + return funnel) | Missing | Should |
 | Reminders / follow-ups | Missing | Should |
-| Network import: contacts → LinkedIn → (accounts) → calendar → email | Missing | Should (contacts/LinkedIn) / Won't-yet (email) |
+| Network import: contacts (done) → LinkedIn → (accounts) → calendar → email | Contacts shipped; rest missing | Should (LinkedIn) / Won't-yet (email) |
 | "Looking for" as a first-class field | Missing | Should |
 | Scheduled in-app Intros digest | Missing | Could |
 | Auto-enrichment / overnight research | Missing | Could |
@@ -95,13 +95,17 @@ Instrument the core-loop events: person captured, graph opened, returned next da
   mapper into the engine's existing `Contact` shape (same role as
   `personToContact`), so the intro engine already consumes all of them for free.
   Sequence the sources by value-per-unit-of-trust, not raw value:
-    0. **Voice/text capture** — already shipped; the always-on manual on-ramp.
-    1. **Phone contacts** — build first. Native permission (`expo-contacts`),
-       low effort, high payoff, low sensitivity. Review-and-add flow, dedupe
-       against existing people.
-    2. **LinkedIn export** — cheap: the user exports `Connections.csv`
-       (name/company/title) and Orbit parses it. Sidesteps the closed API.
-       Basically a CSV import, so nearly as easy as #1.
+    0. **Voice/text capture** — shipped; the always-on manual on-ramp.
+    1. **Phone contacts** — SHIPPED (mobile). `POST /api/people/import` is the
+       shared bulk-add + dedupe endpoint every source funnels through
+       (`routes/import.ts`); the Expo app reads contacts via `expo-contacts`,
+       shows a review-and-select screen, and posts the chosen ones
+       (`app/import-contacts.tsx`, entry point on the People tab).
+    2. **LinkedIn export** — next cheapest. NOTE: there is no OAuth path — "Sign
+       in with LinkedIn" only returns the user's own profile, not their
+       connections. So the only route is the user exporting `Connections.csv`
+       (name/company/title) and Orbit parsing it into the same import endpoint.
+       Basically a CSV import.
     3. **Calendar** — "met X on this date at this event." High value, needs
        OAuth (Google/Microsoft) and therefore Accounts (#5). Higher sensitivity.
     4. **Email** — reconstruct relationship history from follow-ups. Highest

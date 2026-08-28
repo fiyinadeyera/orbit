@@ -171,6 +171,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CaptureConfirmResult"
+  /people/import:
+    post:
+      operationId: importContacts
+      tags: [people]
+      summary: Bulk-import contacts into the network, skipping duplicates by name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportContactsInput"
+      responses:
+        "201":
+          description: Import summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportContactsResult"
   /reconnects:
     get:
       operationId: listReconnects
@@ -368,6 +386,30 @@ components:
         person: { $ref: "#/components/schemas/Person" }
         daysSinceContact: { type: number, minimum: 0 }
         lastInteraction: { type: ["string", "null"] }
+    ImportContact:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        email: { type: string }
+        phone: { type: string }
+        company: { type: string }
+    ImportContactsInput:
+      type: object
+      required: [contacts]
+      properties:
+        contacts:
+          type: array
+          items: { $ref: "#/components/schemas/ImportContact" }
+    ImportContactsResult:
+      type: object
+      required: [imported, skipped, people]
+      properties:
+        imported: { type: number, minimum: 0 }
+        skipped: { type: number, minimum: 0 }
+        people:
+          type: array
+          items: { $ref: "#/components/schemas/Person" }
     IntroParty:
       type: object
       required: [id, name, role, company]

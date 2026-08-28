@@ -255,6 +255,46 @@ export const ConfirmCaptureResponse = zod.object({
 
 
 /**
+ * @summary Bulk-import contacts into the network, skipping duplicates by name
+ */
+
+
+
+export const ImportContactsBody = zod.object({
+  "contacts": zod.array(zod.object({
+  "name": zod.string().min(1),
+  "email": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "company": zod.string().optional()
+}))
+})
+
+export const importContactsResponseImportedMin = 0;
+
+export const importContactsResponseSkippedMin = 0;
+
+
+
+export const ImportContactsResponse = zod.object({
+  "imported": zod.number().min(importContactsResponseImportedMin),
+  "skipped": zod.number().min(importContactsResponseSkippedMin),
+  "people": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "company": zod.string().nullable(),
+  "role": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "howMet": zod.string().nullable(),
+  "dateMet": zod.coerce.date().nullable(),
+  "notes": zod.string().nullable(),
+  "lastContacted": zod.coerce.date().nullable(),
+  "tags": zod.array(zod.string()),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
  * @summary List people who may be due for a reconnection
  */
 export const listReconnectsResponseDaysSinceContactMin = 0;
