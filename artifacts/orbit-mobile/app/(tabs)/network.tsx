@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   RefreshControl,
@@ -76,25 +75,20 @@ export default function NetworkScreen() {
         </Text>
       </View>
 
-      {graphQuery.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={{
-            alignItems: 'center',
-            paddingTop: 8,
-            paddingBottom: insets.bottom + 120,
-          }}
-          refreshControl={
-            <RefreshControl
-              refreshing={graphQuery.isRefetching}
-              onRefresh={() => graphQuery.refetch()}
-              tintColor={colors.primary}
-            />
-          }
-        >
+      <ScrollView
+        contentContainerStyle={{
+          alignItems: 'center',
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 120,
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={graphQuery.isRefetching}
+            onRefresh={() => graphQuery.refetch()}
+            tintColor={colors.primary}
+          />
+        }
+      >
           {isDemo ? (
             <View style={[styles.demoBanner, { backgroundColor: colors.secondary }]}>
               <Feather name="info" size={13} color={colors.secondaryForeground} />
@@ -118,7 +112,6 @@ export default function NetworkScreen() {
             Tap a circle to see how you know them.
           </Text>
         </ScrollView>
-      )}
 
       <Modal
         visible={selected !== null}
@@ -231,11 +224,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   demoBanner: {
     flexDirection: 'row',
