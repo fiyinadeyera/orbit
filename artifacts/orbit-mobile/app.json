@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.anonymous.orbit-mobile"
+      "bundleIdentifier": "com.fiyinadeyera.orbit"
     },
     "android": {},
     "web": {

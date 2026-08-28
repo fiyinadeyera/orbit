@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
+import { hasGoogleClientId } from '@/lib/googleContacts';
 
 type Source = {
   icon: keyof typeof Feather.glyphMap;
@@ -13,30 +14,37 @@ type Source = {
   soon?: boolean;
 };
 
-const SOURCES: Source[] = [
-  {
-    icon: 'smartphone',
-    title: 'Phone contacts',
-    subtitle: 'Pick from the contacts already on your phone.',
-    href: '/import-contacts' as Href,
-  },
-  {
-    icon: 'mail',
-    title: 'Google contacts',
-    subtitle: 'Sign in with Google and choose who to add.',
-    href: '/import-google' as Href,
-  },
-  {
-    icon: 'linkedin',
-    title: 'LinkedIn',
-    subtitle: 'Import from a LinkedIn connections export.',
-    href: '/import-linkedin' as Href,
-  },
-];
-
 export default function ImportHubScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+
+  // Google needs OAuth client IDs to work at all; until they're configured,
+  // show it as coming soon rather than letting the user hit a broken screen.
+  const googleReady = hasGoogleClientId();
+
+  const sources: Source[] = [
+    {
+      icon: 'smartphone',
+      title: 'Phone contacts',
+      subtitle: 'Pick from the contacts already on your phone.',
+      href: '/import-contacts' as Href,
+    },
+    {
+      icon: 'linkedin',
+      title: 'LinkedIn',
+      subtitle: 'Import from a LinkedIn connections export.',
+      href: '/import-linkedin' as Href,
+    },
+    {
+      icon: 'mail',
+      title: 'Google contacts',
+      subtitle: googleReady
+        ? 'Sign in with Google and choose who to add.'
+        : 'Coming soon, needs Google sign-in setup.',
+      href: googleReady ? ('/import-google' as Href) : undefined,
+      soon: !googleReady,
+    },
+  ];
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -52,7 +60,7 @@ export default function ImportHubScreen() {
           Bring your network into Orbit. You always choose who gets added.
         </Text>
 
-        {SOURCES.map((source) => (
+        {sources.map((source) => (
           <Pressable
             key={source.title}
             disabled={source.soon || !source.href}
