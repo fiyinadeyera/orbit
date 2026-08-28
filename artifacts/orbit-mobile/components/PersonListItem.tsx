@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   name: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 15,
   },
   subtitle: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
   },
   tags: {
@@ -110,11 +110,11 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   trailingLabel: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 12,
   },
   trailingSublabel: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 10,
   },
 });

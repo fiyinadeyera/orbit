@@ -29,7 +29,13 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Orbit uses the microphone so you can capture a note by voice."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

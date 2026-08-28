@@ -43,6 +43,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   initials: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
   },
 });

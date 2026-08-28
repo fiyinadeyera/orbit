@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   errorText: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 14,
   },
   headerActions: {
@@ -312,11 +312,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   name: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 24,
   },
   role: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 14,
   },
   metaRow: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaText: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
   },
   tagsRow: {
@@ -340,11 +340,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   cardTitle: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
   },
   cardText: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 13.5,
     lineHeight: 19,
   },
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionTitle: {
-    fontFamily: 'PlayfairDisplay_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 18,
   },
   composer: {
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   },
   composerInput: {
     flex: 1,
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 14,
     minHeight: 40,
     maxHeight: 100,
@@ -383,11 +383,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   timelineDate: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
   },
   rawNote: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontStyle: 'italic',
     fontSize: 13,
     lineHeight: 18,

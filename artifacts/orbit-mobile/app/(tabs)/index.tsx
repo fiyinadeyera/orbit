@@ -10,6 +10,15 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import {
+  AudioQuality,
+  IOSOutputFormat,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from 'expo-audio';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +28,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { PersonListItem } from '@/components/PersonListItem';
 import { Skeleton } from '@/components/Skeleton';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { transcribeRecording } from '@/lib/transcribe';
 import {
   getListPeopleQueryKey,
   getListReconnectsQueryKey,
@@ -27,6 +37,22 @@ import {
   useListPeople,
   useListReconnects,
 } from '@workspace/api-client-react';
+
+// Record 16kHz mono WAV. The API's /transcribe detects format by magic bytes
+// and passes WAV straight through to OpenAI (no server-side ffmpeg transcode),
+// so recording WAV on device keeps voice capture dependency-free. 16kHz mono is
+// plenty for speech and keeps files small enough for the 25mb upload limit.
+const WAV_RECORDING_OPTIONS = {
+  ...RecordingPresets.HIGH_QUALITY,
+  extension: '.wav',
+  sampleRate: 16000,
+  numberOfChannels: 1,
+  ios: {
+    ...RecordingPresets.HIGH_QUALITY.ios,
+    outputFormat: IOSOutputFormat.LINEARPCM,
+    audioQuality: AudioQuality.HIGH,
+  },
+};
 
 export default function JournalScreen() {
   const colors = useColors();
@@ -44,6 +70,18 @@ export default function JournalScreen() {
   const confirmCapture = useConfirmCapture();
   const isCapturing = extractCapture.isPending || confirmCapture.isPending;
 
+  // Voice capture: record on device, transcribe via the API, then drop the
+  // text into the same note field so it flows through the existing extract →
+  // confirm pipeline. The user can still edit the transcript before saving.
+  const audioRecorder = useAudioRecorder(WAV_RECORDING_OPTIONS);
+  const recorderState = useAudioRecorderState(audioRecorder);
+  const isRecording = recorderState.isRecording;
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  // Capture is voice-first: 'voice' shows the big record button, 'text' shows
+  // the editable note field. A finished transcription flips us to 'text' so the
+  // user can review before saving; "Type instead" flips there manually.
+  const [mode, setMode] = useState<'voice' | 'text'>('voice');
+
   const invalidateAfterCapture = () => {
     queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() });
     queryClient.invalidateQueries({ queryKey: getListReconnectsQueryKey() });
@@ -52,6 +90,57 @@ export default function JournalScreen() {
   const failCapture = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     showToast("Couldn't save that note. Try again.", 'error');
+  };
+
+  const startRecording = async () => {
+    try {
+      const permission = await requestRecordingPermissionsAsync();
+      if (!permission.granted) {
+        showToast('Microphone access is off. Enable it in Settings.', 'error');
+        return;
+      }
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      showToast("Couldn't start recording. Try again.", 'error');
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
+      await setAudioModeAsync({ allowsRecording: false });
+      if (!uri) return;
+
+      setIsTranscribing(true);
+      const text = await transcribeRecording(uri);
+      // Append to whatever is already typed so voice and text can be combined.
+      setNote((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+      // Surface the transcript for a quick review/edit before saving.
+      setMode('text');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (error) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      showToast(
+        error instanceof Error ? error.message : 'Could not transcribe that.',
+        'error',
+      );
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const handleMicPress = () => {
+    if (isCapturing || isTranscribing) return;
+    if (isRecording) {
+      void stopRecording();
+    } else {
+      void startRecording();
+    }
   };
 
   const handleCapture = () => {
@@ -81,6 +170,7 @@ export default function JournalScreen() {
               onSuccess: (result) => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 setNote('');
+                setMode('voice');
                 invalidateAfterCapture();
                 showToast(
                   result.created
@@ -120,46 +210,111 @@ export default function JournalScreen() {
         <View style={styles.header}>
           <Text style={[styles.wordmark, { color: colors.foreground }]}>Orbit</Text>
           <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
-            Relationship Intelligence
+            Your Network Universe
           </Text>
         </View>
 
-        <View style={[styles.composerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.composerLabel, { color: colors.mutedForeground }]}>
-            Capture a moment
-          </Text>
-          <TextInput
-            value={note}
-            onChangeText={setNote}
-            placeholder="Ran into Maya at the conference, she just started a new role at..."
-            placeholderTextColor={colors.mutedForeground}
-            multiline
-            textAlignVertical="top"
-            style={[styles.composerInput, { color: colors.foreground }]}
-          />
-          <Pressable
-            onPress={handleCapture}
-            disabled={!note.trim() || isCapturing}
-            style={({ pressed }) => [
-              styles.captureButton,
-              {
-                backgroundColor: colors.primary,
-                opacity: !note.trim() || isCapturing ? 0.5 : pressed ? 0.85 : 1,
-              },
-            ]}
-          >
-            {isCapturing ? (
-              <ActivityIndicator size="small" color={colors.primaryForeground} />
-            ) : (
-              <>
-                <Feather name="send" size={15} color={colors.primaryForeground} />
-                <Text style={[styles.captureButtonText, { color: colors.primaryForeground }]}>
-                  Save note
+        {mode === 'voice' ? (
+          <View style={styles.voiceHero}>
+            <Text style={[styles.voicePrompt, { color: colors.foreground }]}>
+              {isRecording ? 'Listening...' : isTranscribing ? 'One sec...' : 'What happened?'}
+            </Text>
+            <Text style={[styles.voiceSubtitle, { color: colors.mutedForeground }]}>
+              {isRecording
+                ? 'Tap the button when you are done.'
+                : isTranscribing
+                  ? 'Turning your voice into a note.'
+                  : 'Tap to record who you met and what you talked about.'}
+            </Text>
+
+            <Pressable
+              onPress={handleMicPress}
+              disabled={isCapturing || isTranscribing}
+              accessibilityLabel={isRecording ? 'Stop recording' : 'Start recording'}
+              style={({ pressed }) => [
+                styles.micHero,
+                {
+                  backgroundColor: isRecording ? colors.destructive : colors.primary,
+                  opacity: isCapturing || isTranscribing ? 0.6 : pressed ? 0.9 : 1,
+                  transform: [{ scale: pressed ? 0.96 : 1 }],
+                },
+              ]}
+            >
+              {isTranscribing ? (
+                <ActivityIndicator color={colors.primaryForeground} />
+              ) : (
+                <Feather
+                  name={isRecording ? 'square' : 'mic'}
+                  size={40}
+                  color={colors.primaryForeground}
+                />
+              )}
+            </Pressable>
+
+            <Pressable
+              onPress={() => setMode('text')}
+              disabled={isRecording || isTranscribing}
+              hitSlop={8}
+              style={styles.typeInstead}
+            >
+              <Feather name="edit-3" size={13} color={colors.mutedForeground} />
+              <Text style={[styles.typeInsteadText, { color: colors.mutedForeground }]}>
+                Type instead
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={[styles.composerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.composerHeaderRow}>
+              <Text style={[styles.composerLabel, { color: colors.mutedForeground }]}>
+                Review and save
+              </Text>
+              <Pressable
+                onPress={() => setMode('voice')}
+                disabled={isCapturing}
+                hitSlop={8}
+                style={styles.recordInstead}
+              >
+                <Feather name="mic" size={12} color={colors.primary} />
+                <Text style={[styles.recordInsteadText, { color: colors.primary }]}>
+                  Record instead
                 </Text>
-              </>
-            )}
-          </Pressable>
-        </View>
+              </Pressable>
+            </View>
+            <TextInput
+              value={note}
+              onChangeText={setNote}
+              placeholder="Ran into Maya at the conference, she just started a new role at..."
+              placeholderTextColor={colors.mutedForeground}
+              multiline
+              autoFocus
+              textAlignVertical="top"
+              style={[styles.composerInput, { color: colors.foreground }]}
+            />
+            <Pressable
+              onPress={handleCapture}
+              disabled={!note.trim() || isCapturing}
+              style={({ pressed }) => [
+                styles.captureButton,
+                {
+                  backgroundColor: colors.primary,
+                  opacity: !note.trim() || isCapturing ? 0.5 : pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              {isCapturing ? (
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              ) : (
+                <>
+                  <Feather name="send" size={15} color={colors.primaryForeground} />
+                  <Text style={[styles.captureButtonText, { color: colors.primaryForeground }]}>
+                    Save note
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Time to reconnect</Text>
@@ -240,14 +395,55 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   wordmark: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 32,
   },
   tagline: {
-    fontFamily: 'DMSans_500Medium',
+    fontFamily: 'Inter_500Medium',
     fontSize: 12.5,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
+  },
+  voiceHero: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 8,
+  },
+  voicePrompt: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 26,
+  },
+  voiceSubtitle: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    maxWidth: 260,
+  },
+  micHero: {
+    marginTop: 20,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  typeInstead: {
+    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  typeInsteadText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    textDecorationLine: 'underline',
   },
   composerCard: {
     borderWidth: 1,
@@ -255,12 +451,26 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
+  composerHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   composerLabel: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12.5,
+  },
+  recordInstead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  recordInsteadText: {
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 12.5,
   },
   composerInput: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 15,
     minHeight: 76,
     lineHeight: 21,
@@ -270,11 +480,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderRadius: 12,
   },
   captureButtonText: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
   },
   section: {
@@ -286,11 +496,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionTitle: {
-    fontFamily: 'PlayfairDisplay_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 19,
   },
   viewAll: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
   },
 });

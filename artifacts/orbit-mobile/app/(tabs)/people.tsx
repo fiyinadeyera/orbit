@@ -113,11 +113,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 26,
   },
   subtitle: {
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
     marginTop: 2,
   },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: 'DMSans_400Regular',
+    fontFamily: 'Inter_400Regular',
     fontSize: 14,
   },
   list: {

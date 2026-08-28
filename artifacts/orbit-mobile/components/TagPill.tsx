@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   label: {
-    fontFamily: 'DMSans_500Medium',
+    fontFamily: 'Inter_500Medium',
     fontSize: 11,
   },
 });

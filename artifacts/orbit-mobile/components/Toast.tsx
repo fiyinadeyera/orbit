@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   text: {
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
     textAlign: 'center',
   },
