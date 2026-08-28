@@ -1,57 +1,67 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Contacts from 'expo-contacts';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { EmptyState } from '@/components/EmptyState';
 import { ContactImportReview } from '@/components/ContactImportReview';
+import {
+  GOOGLE_CONTACTS_SCOPE,
+  fetchGoogleContacts,
+  googleClientIds,
+  hasGoogleClientId,
+} from '@/lib/googleContacts';
 import type { ImportCandidate } from '@/lib/importCandidates';
 
-// Map a raw device contact into an import candidate, or null if it has no
-// usable name. Deduping happens later in the shared review step.
-function toCandidate(contact: Contacts.Contact): ImportCandidate | null {
-  const name = (contact.name ?? '').trim();
-  if (!name) return null;
-  return {
-    key: name,
-    name,
-    email: contact.emails?.[0]?.email?.trim() || undefined,
-    phone: contact.phoneNumbers?.[0]?.number?.trim() || undefined,
-    company: contact.company?.trim() || undefined,
-  };
-}
+// Required for the OAuth redirect to close the in-app browser and return here.
+WebBrowser.maybeCompleteAuthSession();
 
-type Stage = 'intro' | 'loading' | 'denied' | 'review';
+type Stage = 'intro' | 'authorizing' | 'loading' | 'error' | 'review';
 
-export default function ImportContactsScreen() {
+export default function ImportGoogleScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
 
   const [stage, setStage] = useState<Stage>('intro');
   const [candidates, setCandidates] = useState<ImportCandidate[]>([]);
 
-  const loadContacts = useCallback(async () => {
-    setStage('loading');
-    const { status } = await Contacts.requestPermissionsAsync();
-    if (status !== 'granted') {
-      setStage('denied');
-      return;
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: googleClientIds.iosClientId,
+    androidClientId: googleClientIds.androidClientId,
+    webClientId: googleClientIds.webClientId,
+    scopes: [GOOGLE_CONTACTS_SCOPE],
+  });
+
+  // When the OAuth flow returns, use the access token to pull contacts.
+  useEffect(() => {
+    if (!response) return;
+    if (response.type === 'success') {
+      const token = response.authentication?.accessToken;
+      if (!token) {
+        setStage('error');
+        return;
+      }
+      setStage('loading');
+      fetchGoogleContacts(token)
+        .then((fetched) => {
+          setCandidates(fetched);
+          setStage('review');
+        })
+        .catch(() => setStage('error'));
+    } else if (response.type === 'error') {
+      setStage('error');
+    } else if (response.type === 'dismiss' || response.type === 'cancel') {
+      setStage('intro');
     }
+  }, [response]);
 
-    const { data } = await Contacts.getContactsAsync({
-      fields: [
-        Contacts.Fields.Name,
-        Contacts.Fields.Emails,
-        Contacts.Fields.PhoneNumbers,
-        Contacts.Fields.Company,
-      ],
-    });
-
-    setCandidates(data.map(toCandidate).filter((c): c is ImportCandidate => c !== null));
-    setStage('review');
-  }, []);
+  const connect = useCallback(() => {
+    setStage('authorizing');
+    promptAsync().catch(() => setStage('error'));
+  }, [promptAsync]);
 
   const header = (title: string) => (
     <View style={[styles.header, { paddingTop: insets.top + 12, borderBottomColor: colors.border }]}>
@@ -73,42 +83,52 @@ export default function ImportContactsScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      {header('Import contacts')}
+      {header('Import from Google')}
       <View style={styles.centered}>
-        {stage === 'loading' ? (
+        {stage === 'authorizing' || stage === 'loading' ? (
           <>
             <ActivityIndicator color={colors.primary} />
             <Text style={[styles.body, { color: colors.mutedForeground, marginTop: 16 }]}>
-              Reading your contacts...
+              {stage === 'loading' ? 'Fetching your Google contacts...' : 'Waiting for Google...'}
             </Text>
           </>
-        ) : stage === 'denied' ? (
+        ) : stage === 'error' ? (
           <EmptyState
-            icon="lock"
-            title="Contacts access is off"
-            description="To import, allow Orbit to access your contacts in Settings, then try again."
+            icon="alert-circle"
+            title="Couldn't connect to Google"
+            description="Something went wrong reaching Google contacts. Please try again."
+          />
+        ) : !hasGoogleClientId() ? (
+          <EmptyState
+            icon="settings"
+            title="Google sign-in isn't configured yet"
+            description="Add the Google OAuth client IDs (see GOOGLE_SETUP.md) to enable this."
           />
         ) : (
           <>
             <View style={[styles.iconWrap, { backgroundColor: colors.secondary }]}>
-              <Feather name="users" size={28} color={colors.primary} />
+              <Feather name="mail" size={26} color={colors.primary} />
             </View>
             <Text style={[styles.introTitle, { color: colors.foreground }]}>
-              Bring your contacts to Orbit
+              Bring your Google contacts to Orbit
             </Text>
             <Text style={[styles.body, { color: colors.mutedForeground }]}>
-              Orbit will look through your phone contacts and let you choose who to add. Nothing is
-              added without your say so.
+              Sign in with Google to let Orbit read your contacts. You choose who to add, and Orbit
+              never keeps your Google password.
             </Text>
             <Pressable
-              onPress={loadContacts}
+              onPress={connect}
+              disabled={!request}
               style={({ pressed }) => [
                 styles.primaryButton,
-                { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+                {
+                  backgroundColor: colors.primary,
+                  opacity: !request ? 0.5 : pressed ? 0.85 : 1,
+                },
               ]}
             >
               <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>
-                Connect contacts
+                Continue with Google
               </Text>
             </Pressable>
           </>

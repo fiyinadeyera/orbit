@@ -38,7 +38,7 @@ Status = where Orbit is today. Bucket = priority for the "shippable free app" mi
 | Error / empty / loading states (full sweep) | Partial | Must |
 | Basic analytics (activation + return funnel) | Missing | Should |
 | Reminders / follow-ups | Missing | Should |
-| Network import: contacts (done) → LinkedIn → (accounts) → calendar → email | Contacts shipped; rest missing | Should (LinkedIn) / Won't-yet (email) |
+| Network import: contacts (done) → Google (scaffolded) → LinkedIn → calendar → email | Contacts shipped; Google awaiting OAuth setup | Should |
 | "Looking for" as a first-class field | Missing | Should |
 | Scheduled in-app Intros digest | Missing | Could |
 | Auto-enrichment / overnight research | Missing | Could |
@@ -101,11 +101,20 @@ Instrument the core-loop events: person captured, graph opened, returned next da
        (`routes/import.ts`); the Expo app reads contacts via `expo-contacts`,
        shows a review-and-select screen, and posts the chosen ones
        (`app/import-contacts.tsx`, entry point on the People tab).
-    2. **LinkedIn export** — next cheapest. NOTE: there is no OAuth path — "Sign
-       in with LinkedIn" only returns the user's own profile, not their
-       connections. So the only route is the user exporting `Connections.csv`
-       (name/company/title) and Orbit parsing it into the same import endpoint.
-       Basically a CSV import.
+    2. **Google contacts** — SCAFFOLDED (mobile), awaiting OAuth setup. The
+       frictionless one: "Continue with Google" → People API → same review +
+       import endpoint. Code is done (`app/import-google.tsx`,
+       `lib/googleContacts.ts`); it needs Google Cloud OAuth client IDs that
+       only the account owner can create — see
+       `artifacts/orbit-mobile/GOOGLE_SETUP.md`. It's a one-time data grant, not
+       an Orbit login, so it does NOT depend on the accounts project. Public
+       App Store release will need Google's sensitive-scope verification (not
+       blocking dev/TestFlight).
+    3. **LinkedIn export** — after Google, as a secondary "option, not the real
+       thing". NOTE: there is no OAuth path — "Sign in with LinkedIn" only
+       returns the user's own profile, not their connections. So the only route
+       is the user exporting `Connections.csv` (name/company/title) and Orbit
+       parsing it into the same import endpoint. Basically a CSV import.
     3. **Calendar** — "met X on this date at this event." High value, needs
        OAuth (Google/Microsoft) and therefore Accounts (#5). Higher sensitivity.
     4. **Email** — reconstruct relationship history from follow-ups. Highest

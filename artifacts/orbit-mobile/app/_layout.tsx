@@ -57,8 +57,13 @@ function RootLayoutNav() {
           sheetGrabberVisible: true,
         }}
       />
+      <Stack.Screen name="import" options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen
         name="import-contacts"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="import-google"
         options={{ headerShown: false, presentation: 'modal' }}
       />
     </Stack>

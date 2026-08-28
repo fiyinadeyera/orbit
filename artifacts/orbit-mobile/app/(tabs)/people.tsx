@@ -37,12 +37,12 @@ export default function PeopleScreen() {
           </View>
           <View style={styles.headerActions}>
             <Pressable
-              onPress={() => router.push('/import-contacts' as Href)}
+              onPress={() => router.push('/import' as Href)}
               style={({ pressed }) => [
                 styles.iconButton,
                 { backgroundColor: colors.secondary, opacity: pressed ? 0.85 : 1 },
               ]}
-              accessibilityLabel="Import contacts"
+              accessibilityLabel="Import people"
             >
               <Feather name="download" size={18} color={colors.primary} />
             </Pressable>
