@@ -27,6 +27,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: 'circle.grid.2x2', selected: 'circle.grid.2x2.fill' }} />
         <Label>Network</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="intros">
+        <Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
+        <Label>Intros</Label>
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
@@ -98,6 +102,18 @@ function ClassicTabLayout() {
               <SymbolView name="circle.grid.2x2" tintColor={color} size={22} />
             ) : (
               <Feather name="share-2" size={20} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="intros"
+        options={{
+          title: 'Intros',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="sparkles" tintColor={color} size={22} />
+            ) : (
+              <Feather name="zap" size={20} color={color} />
             ),
         }}
       />
