@@ -265,7 +265,8 @@ export const ImportContactsBody = zod.object({
   "name": zod.string().min(1),
   "email": zod.string().optional(),
   "phone": zod.string().optional(),
-  "company": zod.string().optional()
+  "company": zod.string().optional(),
+  "role": zod.string().optional()
 }))
 })
 

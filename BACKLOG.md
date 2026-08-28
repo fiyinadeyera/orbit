@@ -38,7 +38,7 @@ Status = where Orbit is today. Bucket = priority for the "shippable free app" mi
 | Error / empty / loading states (full sweep) | Partial | Must |
 | Basic analytics (activation + return funnel) | Missing | Should |
 | Reminders / follow-ups | Missing | Should |
-| Network import: contacts (done) → Google (scaffolded) → LinkedIn → calendar → email | Contacts shipped; Google awaiting OAuth setup | Should |
+| Network import: contacts (done) → LinkedIn (done) → Google (scaffolded) → calendar → email | Contacts + LinkedIn shipped; Google awaiting OAuth setup | Should |
 | "Looking for" as a first-class field | Missing | Should |
 | Scheduled in-app Intros digest | Missing | Could |
 | Auto-enrichment / overnight research | Missing | Could |
@@ -110,11 +110,13 @@ Instrument the core-loop events: person captured, graph opened, returned next da
        an Orbit login, so it does NOT depend on the accounts project. Public
        App Store release will need Google's sensitive-scope verification (not
        blocking dev/TestFlight).
-    3. **LinkedIn export** — after Google, as a secondary "option, not the real
-       thing". NOTE: there is no OAuth path — "Sign in with LinkedIn" only
-       returns the user's own profile, not their connections. So the only route
-       is the user exporting `Connections.csv` (name/company/title) and Orbit
-       parsing it into the same import endpoint. Basically a CSV import.
+    3. **LinkedIn export** — SHIPPED (mobile). The tacky-but-legit path: the user
+       exports `Connections.csv` from LinkedIn (there is no OAuth for connections,
+       only the export file), and Orbit parses it (`lib/linkedinCsv.ts`,
+       `app/import-linkedin.tsx`) into the same review + import flow. Carries job
+       title through as `role`. Note: the import pipeline now also threads `role`
+       end to end (LinkedIn Position, Google org title), stored in the existing
+       people.role column.
     3. **Calendar** — "met X on this date at this event." High value, needs
        OAuth (Google/Microsoft) and therefore Accounts (#5). Higher sensitivity.
     4. **Email** — reconstruct relationship history from follow-ups. Highest

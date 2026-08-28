@@ -158,6 +158,7 @@ export interface ImportContact {
   email?: string;
   phone?: string;
   company?: string;
+  role?: string;
 }
 
 export interface ImportContactsInput {

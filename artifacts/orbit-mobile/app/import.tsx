@@ -30,7 +30,7 @@ const SOURCES: Source[] = [
     icon: 'linkedin',
     title: 'LinkedIn',
     subtitle: 'Import from a LinkedIn connections export.',
-    soon: true,
+    href: '/import-linkedin' as Href,
   },
 ];
 

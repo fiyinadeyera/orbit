@@ -63,7 +63,7 @@ export function ContactImportReview({ candidates }: { candidates: ImportCandidat
   const handleImport = useCallback(() => {
     const chosen = fresh
       .filter((c) => selected.has(c.key))
-      .map(({ name, email, phone, company }) => ({ name, email, phone, company }));
+      .map(({ name, email, phone, company, role }) => ({ name, email, phone, company, role }));
     if (chosen.length === 0) return;
 
     importMutation.mutate(
@@ -116,7 +116,8 @@ export function ContactImportReview({ candidates }: { candidates: ImportCandidat
         }
         renderItem={({ item }) => {
           const isSelected = selected.has(item.key);
-          const meta = [item.company, item.email, item.phone].filter(Boolean).join(' · ');
+          const title = [item.role, item.company].filter(Boolean).join(' at ');
+          const meta = [title, item.email, item.phone].filter(Boolean).join(' · ');
           return (
             <Pressable
               onPress={() => toggle(item.key)}

@@ -10,6 +10,7 @@ export type ImportCandidate = {
   email?: string;
   phone?: string;
   company?: string;
+  role?: string;
 };
 
 /**

@@ -46,6 +46,7 @@ router.post("/people/import", async (req, res): Promise<void> => {
       id: randomUUID(),
       name,
       company: contact.company?.trim() || null,
+      role: contact.role?.trim() || null,
       howMet: "Imported from contacts",
       notes: details || null,
       tags: ["imported"],

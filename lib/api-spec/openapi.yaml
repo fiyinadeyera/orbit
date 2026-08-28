@@ -394,6 +394,7 @@ components:
         email: { type: string }
         phone: { type: string }
         company: { type: string }
+        role: { type: string }
     ImportContactsInput:
       type: object
       required: [contacts]

@@ -41,6 +41,7 @@ export function mapGooglePerson(person: GooglePerson): ImportCandidate | null {
     email: person.emailAddresses?.[0]?.value?.trim() || undefined,
     phone: person.phoneNumbers?.[0]?.value?.trim() || undefined,
     company: person.organizations?.[0]?.name?.trim() || undefined,
+    role: person.organizations?.[0]?.title?.trim() || undefined,
   };
 }
 

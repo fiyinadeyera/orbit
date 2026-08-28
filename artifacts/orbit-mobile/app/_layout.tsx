@@ -66,6 +66,10 @@ function RootLayoutNav() {
         name="import-google"
         options={{ headerShown: false, presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="import-linkedin"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
     </Stack>
   );
 }
