@@ -15,6 +15,14 @@ type NetworkGraphProps = {
 const NODE_SIZE = 62;
 const CENTER_SIZE = 78;
 
+// A small harmonious palette so each contact reads as its own node instead of
+// a wall of identical circles. Assigned by position; works on light and dark.
+export const NODE_COLORS = ['#326755', '#c69653', '#4a7ba6', '#b0654f', '#7a6aa8', '#3f8a7a'];
+
+export function nodeColorForIndex(index: number): string {
+  return NODE_COLORS[index % NODE_COLORS.length];
+}
+
 export function NetworkGraph({
   people,
   edges,
@@ -120,10 +128,11 @@ export function NetworkGraph({
       </View>
 
       {/* Contact nodes. */}
-      {people.map((person) => {
+      {people.map((person, index) => {
         const pos = positions[person.id];
         if (!pos) return null;
         const isSelected = person.id === selectedId;
+        const nodeColor = nodeColorForIndex(index);
         return (
           <Pressable
             key={person.id}
@@ -134,14 +143,14 @@ export function NetworkGraph({
                 left: pos.x - NODE_SIZE / 2,
                 top: pos.y - NODE_SIZE / 2,
                 backgroundColor: colors.card,
-                borderColor: isSelected ? colors.accent : colors.primary,
-                borderWidth: isSelected ? 3 : 2,
+                borderColor: nodeColor,
+                borderWidth: isSelected ? 4 : 2.5,
                 opacity: pressed ? 0.8 : 1,
-                transform: [{ scale: pressed ? 0.94 : isSelected ? 1.06 : 1 }],
+                transform: [{ scale: pressed ? 0.94 : isSelected ? 1.08 : 1 }],
               },
             ]}
           >
-            <Text style={[styles.initials, { color: colors.foreground }]}>{person.initials}</Text>
+            <Text style={[styles.initials, { color: nodeColor }]}>{person.initials}</Text>
           </Pressable>
         );
       })}

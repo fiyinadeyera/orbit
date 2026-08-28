@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -54,6 +54,17 @@ const WAV_RECORDING_OPTIONS = {
   },
 };
 
+// Safety cap so a forgotten recording can't run forever (and stays well under
+// the 25mb transcribe upload limit). It auto-stops and transcribes at this mark.
+const MAX_RECORDING_MS = 120000;
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 export default function JournalScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -74,7 +85,9 @@ export default function JournalScreen() {
   // text into the same note field so it flows through the existing extract →
   // confirm pipeline. The user can still edit the transcript before saving.
   const audioRecorder = useAudioRecorder(WAV_RECORDING_OPTIONS);
-  const recorderState = useAudioRecorderState(audioRecorder);
+  // Poll a few times a second so the on-screen timer ticks and the auto-stop
+  // safety cap fires promptly while recording.
+  const recorderState = useAudioRecorderState(audioRecorder, 250);
   const isRecording = recorderState.isRecording;
   const [isTranscribing, setIsTranscribing] = useState(false);
   // Capture is voice-first: 'voice' shows the big record button, 'text' shows
@@ -142,6 +155,16 @@ export default function JournalScreen() {
       void startRecording();
     }
   };
+
+  // Auto-stop (and transcribe) once the recording hits the safety cap.
+  useEffect(() => {
+    if (isRecording && recorderState.durationMillis >= MAX_RECORDING_MS) {
+      void stopRecording();
+    }
+    // stopRecording is stable enough for this guard; re-running on duration is
+    // what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecording, recorderState.durationMillis]);
 
   const handleCapture = () => {
     const trimmed = note.trim();
@@ -217,7 +240,11 @@ export default function JournalScreen() {
         {mode === 'voice' ? (
           <View style={styles.voiceHero}>
             <Text style={[styles.voicePrompt, { color: colors.foreground }]}>
-              {isRecording ? 'Listening...' : isTranscribing ? 'One sec...' : 'What happened?'}
+              {isRecording
+                ? formatDuration(recorderState.durationMillis)
+                : isTranscribing
+                  ? 'One sec...'
+                  : 'What happened?'}
             </Text>
             <Text style={[styles.voiceSubtitle, { color: colors.mutedForeground }]}>
               {isRecording
@@ -392,17 +419,17 @@ const styles = StyleSheet.create({
     gap: 26,
   },
   header: {
-    gap: 2,
+    gap: 3,
   },
   wordmark: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 32,
+    fontSize: 34,
+    letterSpacing: -0.8,
   },
   tagline: {
     fontFamily: 'Inter_500Medium',
     fontSize: 14,
     letterSpacing: 0.1,
-    marginTop: 1,
   },
   voiceHero: {
     alignItems: 'center',

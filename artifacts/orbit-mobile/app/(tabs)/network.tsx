@@ -13,7 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { NetworkGraph } from '@/components/NetworkGraph';
+import { NetworkGraph, nodeColorForIndex } from '@/components/NetworkGraph';
 import { TagPill } from '@/components/TagPill';
 import {
   DEMO_THRESHOLD,
@@ -65,6 +65,9 @@ export default function NetworkScreen() {
 
   const canvasSize = Math.min(width - 40, 420);
   const dateMet = selected ? formatDateMet(selected.dateMet) : null;
+  const selectedColor = selected
+    ? nodeColorForIndex(people.findIndex((p) => p.id === selected.id))
+    : colors.primary;
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -129,8 +132,8 @@ export default function NetworkScreen() {
             {selected ? (
               <>
                 <View style={styles.sheetHeader}>
-                  <View style={[styles.sheetAvatar, { backgroundColor: colors.secondary, borderColor: colors.primary }]}>
-                    <Text style={[styles.sheetAvatarText, { color: colors.foreground }]}>
+                  <View style={[styles.sheetAvatar, { backgroundColor: colors.secondary, borderColor: selectedColor }]}>
+                    <Text style={[styles.sheetAvatarText, { color: selectedColor }]}>
                       {selected.initials}
                     </Text>
                   </View>
