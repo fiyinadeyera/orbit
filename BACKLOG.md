@@ -12,7 +12,7 @@ audit**, not a to-do order:
 
 - Core object / relationship / visualization / utility: **done**
 - AI (intro engine): **partly done**
-- Accounts (the foundation): **missing**
+- Accounts (the foundation): **code done on the `feat/auth` branch, not yet switched on**
 - Reliability, measurement, monetization: **mostly missing**
 
 The near-term goal is a shippable, free Orbit real people can use on their own
@@ -25,6 +25,42 @@ priorities below on purpose.
 
 ---
 
+## Current constraints & restrictions
+
+**Hard restrictions (platform rules, cannot be engineered around):**
+
+1. **LinkedIn won't auto-connect.** There is no "sign in with LinkedIn → import
+   connections." LinkedIn blocks apps from reading a user's connection list.
+   The only route is the user exporting `Connections.csv` and uploading it.
+2. **iPhone contacts are native-app only.** iOS Safari has no Contact Picker, so
+   the one-tap phone-contacts import works only in the Expo app, never the web app.
+3. **The native app doesn't scale for distribution.** Putting it on someone
+   else's iPhone needs either the paid Apple membership ($99/yr) + App Review, or
+   a cable + Xcode. This is why the web/PWA path is the way to reach other people.
+4. **Google import needs owner setup + a review to go public.** Requires Google
+   Cloud OAuth client IDs (owner-only), and Google must review the contacts
+   ("sensitive") scope before non-test users can use it — can take weeks.
+5. **AI costs money per use.** Every voice capture = a paid transcription +
+   extraction. Spending caps are in place (per-user daily quota), but a free host
+   is still not a free app.
+
+**Not restrictions, just not done yet:**
+
+6. **Login isn't switched on** — the DB migration (`lib/db/migrations/0001`) must
+   run before the auth code actually works.
+7. **Nothing is hosted online** — the API only runs on the owner's Mac, so no one
+   else can reach it and it only works on the home Wi-Fi. Needs a Render deploy.
+8. **The native app will need its own login.** The auth just added is web-only
+   (cookie + CSRF, browser-gated); the Expo app has no login, so once auth is on,
+   it gets 401 until a mobile (bearer-token) auth path is added.
+
+The pattern: the hard restrictions push distribution toward the **web version**
+(no Apple gatekeeping, share a link), while the **native app stays the personal
+power-tool** (only it can do one-tap phone contacts). Items 6-8 are switches to
+flip, not walls.
+
+---
+
 ## MoSCoW
 
 Status = where Orbit is today. Bucket = priority for the "shippable free app" milestone.
@@ -33,8 +69,9 @@ Status = where Orbit is today. Bucket = priority for the "shippable free app" mi
 | --- | --- | --- |
 | Core loop: capture → connect → graph → revisit | Done | Must |
 | Reliable persistence + cross-device sync (Neon) | Done | Must |
-| Accounts, auth, per-user data isolation | Missing | Must |
-| Account deletion + privacy policy | Missing | Must |
+| Accounts, auth, per-user data isolation | Code done (feat/auth); not live until the DB migration runs | Must |
+| Rate limits / AI spending caps | Done (feat/auth) | Must |
+| Account deletion + privacy policy | Missing | Must (App Store only) |
 | Error / empty / loading states (full sweep) | Partial | Must |
 | Basic analytics (activation + return funnel) | Missing | Should |
 | Reminders / follow-ups | Missing | Should |
