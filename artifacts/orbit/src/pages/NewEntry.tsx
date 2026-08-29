@@ -49,11 +49,28 @@ function splitList(value: string): string[] {
     .filter(Boolean);
 }
 
+function csrfToken(): string | undefined {
+  const match = document.cookie
+    .split('; ')
+    .find((part) => part.startsWith('orbit_csrf='))
+    ?.slice('orbit_csrf='.length);
+  return match ? decodeURIComponent(match) : undefined;
+}
+
 async function transcribeAudio(blob: Blob): Promise<string> {
+  // This is a raw (non-generated) upload, so it must attach the same session
+  // cookie and CSRF header the API now requires on every state-changing route.
+  const headers: Record<string, string> = {
+    'Content-Type': blob.type || 'application/octet-stream',
+  };
+  const csrf = csrfToken();
+  if (csrf) headers['x-csrf-token'] = csrf;
+
   const response = await fetch('/api/transcribe', {
     method: 'POST',
-    headers: { 'Content-Type': blob.type || 'application/octet-stream' },
+    headers,
     body: blob,
+    credentials: 'include',
   });
   if (!response.ok) {
     const data = await response.json().catch(() => null);

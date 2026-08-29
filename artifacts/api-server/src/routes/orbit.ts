@@ -31,6 +31,8 @@ import {
 } from "@workspace/db";
 import { extractRelationship } from "../lib/relationship-extraction";
 import { reverseGeocode } from "../lib/geocoding";
+import { currentUser } from "../middleware/auth";
+import { aiDailyQuota } from "../middleware/rate-limit";
 
 const router: IRouter = Router();
 
@@ -38,7 +40,7 @@ const isoDate = (value: Date) => value.toISOString().slice(0, 10);
 const dayDifference = (date: string) =>
   Math.floor((Date.now() - new Date(`${date}T12:00:00Z`).getTime()) / 86_400_000);
 
-function personResponse(person: Person) {
+function personResponse({ ownerId: _ownerId, ...person }: Person) {
   return {
     ...person,
     tags: person.tags ?? [],
@@ -65,13 +67,14 @@ function personValues(
 }
 
 router.get("/people", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const parsed = ListPeopleQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const people = await db.select().from(peopleTable).orderBy(peopleTable.name);
+  const people = await db.select().from(peopleTable).where(eq(peopleTable.ownerId, ownerId)).orderBy(peopleTable.name);
   const search = parsed.data.search?.trim().toLowerCase();
   const filtered = search
     ? people.filter((person) =>
@@ -85,6 +88,7 @@ router.get("/people", async (req, res): Promise<void> => {
 });
 
 router.post("/people", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const parsed = CreatePersonBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -99,6 +103,7 @@ router.post("/people", async (req, res): Promise<void> => {
     .insert(peopleTable)
     .values({
       id: randomUUID(),
+      ownerId,
       name: values.name!,
       company: values.company,
       role: values.role,
@@ -116,6 +121,7 @@ router.post("/people", async (req, res): Promise<void> => {
 });
 
 router.get("/people/:id", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const params = GetPersonParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -125,7 +131,7 @@ router.get("/people/:id", async (req, res): Promise<void> => {
   const [person] = await db
     .select()
     .from(peopleTable)
-    .where(eq(peopleTable.id, params.data.id));
+    .where(and(eq(peopleTable.id, params.data.id), eq(peopleTable.ownerId, ownerId)));
   if (!person) {
     res.status(404).json({ error: "Person not found." });
     return;
@@ -135,15 +141,18 @@ router.get("/people/:id", async (req, res): Promise<void> => {
     db
       .select()
       .from(interactionsTable)
-      .where(eq(interactionsTable.personId, person.id))
+      .where(and(eq(interactionsTable.personId, person.id), eq(interactionsTable.ownerId, ownerId)))
       .orderBy(desc(interactionsTable.date)),
     db
       .select()
       .from(connectionsTable)
       .where(
-        or(
+        and(
+          eq(connectionsTable.ownerId, ownerId),
+          or(
           eq(connectionsTable.personAId, person.id),
           eq(connectionsTable.personBId, person.id),
+        ),
         ),
       ),
   ]);
@@ -158,6 +167,7 @@ router.get("/people/:id", async (req, res): Promise<void> => {
 });
 
 router.patch("/people/:id", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const params = UpdatePersonParams.safeParse(req.params);
   const body = UpdatePersonBody.safeParse(req.body);
   if (!params.success) {
@@ -173,7 +183,7 @@ router.patch("/people/:id", async (req, res): Promise<void> => {
   const [person] = await db
     .update(peopleTable)
     .set(values)
-    .where(eq(peopleTable.id, params.data.id))
+    .where(and(eq(peopleTable.id, params.data.id), eq(peopleTable.ownerId, ownerId)))
     .returning();
   if (!person) {
     res.status(404).json({ error: "Person not found." });
@@ -184,6 +194,7 @@ router.patch("/people/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/people/:id", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const params = DeletePersonParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -193,18 +204,19 @@ router.delete("/people/:id", async (req, res): Promise<void> => {
   const [person] = await db
     .select({ id: peopleTable.id })
     .from(peopleTable)
-    .where(eq(peopleTable.id, params.data.id));
+    .where(and(eq(peopleTable.id, params.data.id), eq(peopleTable.ownerId, ownerId)));
   if (!person) {
     res.status(404).json({ error: "Person not found." });
     return;
   }
 
-  await db.delete(peopleTable).where(eq(peopleTable.id, person.id));
+  await db.delete(peopleTable).where(and(eq(peopleTable.id, person.id), eq(peopleTable.ownerId, ownerId)));
 
   res.sendStatus(204);
 });
 
 router.post("/people/:id/interactions", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const params = CreateInteractionParams.safeParse(req.params);
   const body = CreateInteractionBody.safeParse(req.body);
   if (!params.success) {
@@ -219,7 +231,7 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
   const [person] = await db
     .select({ id: peopleTable.id })
     .from(peopleTable)
-    .where(eq(peopleTable.id, params.data.id));
+    .where(and(eq(peopleTable.id, params.data.id), eq(peopleTable.ownerId, ownerId)));
   if (!person) {
     res.status(404).json({ error: "Person not found." });
     return;
@@ -229,6 +241,7 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
     .insert(interactionsTable)
     .values({
       id: randomUUID(),
+      ownerId,
       personId: person.id,
       date: isoDate(body.data.date),
       summary: body.data.summary,
@@ -238,7 +251,7 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
   await db
     .update(peopleTable)
     .set({ lastContacted: interaction.date })
-    .where(eq(peopleTable.id, person.id));
+    .where(and(eq(peopleTable.id, person.id), eq(peopleTable.ownerId, ownerId)));
 
   res.status(201).json(CreateInteractionResponse.parse(interaction));
 });
@@ -246,7 +259,8 @@ router.post("/people/:id/interactions", async (req, res): Promise<void> => {
 // Step 1 of capture: run AI extraction only. Nothing is persisted yet — the
 // caller (voice or typed entry) shows the result for the user to review and
 // edit before it's saved via /capture/confirm.
-router.post("/capture/extract", async (req, res): Promise<void> => {
+router.post("/capture/extract", aiDailyQuota, async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const body = ExtractCaptureBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
@@ -262,7 +276,7 @@ router.post("/capture/extract", async (req, res): Promise<void> => {
     const [existing] = await db
       .select()
       .from(peopleTable)
-      .where(eq(peopleTable.name, extracted.name));
+      .where(and(eq(peopleTable.name, extracted.name), eq(peopleTable.ownerId, ownerId)));
 
     res.status(201).json(
       ExtractCaptureResponse.parse({
@@ -281,6 +295,7 @@ router.post("/capture/extract", async (req, res): Promise<void> => {
 
 // Step 2 of capture: persist the (possibly user-edited) extracted fields.
 router.post("/capture/confirm", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const body = ConfirmCaptureBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
@@ -293,7 +308,7 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
   // existing contact with this exact name.
   const [existing] = data.forceNew
     ? []
-    : await db.select().from(peopleTable).where(eq(peopleTable.name, data.name));
+    : await db.select().from(peopleTable).where(and(eq(peopleTable.name, data.name), eq(peopleTable.ownerId, ownerId)));
   // "Looking for" is its own field now; notes hold the free-text context only.
   const notes = data.context || null;
   const date = isoDate(data.date);
@@ -331,7 +346,7 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
         await db
           .update(peopleTable)
           .set(values)
-          .where(eq(peopleTable.id, existing.id))
+          .where(and(eq(peopleTable.id, existing.id), eq(peopleTable.ownerId, ownerId)))
           .returning()
       )[0]
     : (
@@ -339,6 +354,7 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
           .insert(peopleTable)
           .values({
             id: randomUUID(),
+            ownerId,
             name: data.name,
             ...values,
             // Prefer the (possibly user-edited) date confirmed for this
@@ -351,6 +367,7 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
 
   await db.insert(interactionsTable).values({
     id: randomUUID(),
+    ownerId,
     personId: person.id,
     date,
     summary: data.context ?? "Captured a new relationship note.",
@@ -359,7 +376,7 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
 
   const connectedTo = data.connectedTo ?? [];
   if (connectedTo.length) {
-    const mentionedPeople = await db.select().from(peopleTable);
+    const mentionedPeople = await db.select().from(peopleTable).where(eq(peopleTable.ownerId, ownerId));
     const matches = mentionedPeople.filter(
       (candidate) =>
         candidate.id !== person.id &&
@@ -370,7 +387,9 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
         .select({ id: connectionsTable.id })
         .from(connectionsTable)
         .where(
-          or(
+          and(
+            eq(connectionsTable.ownerId, ownerId),
+            or(
             and(
               eq(connectionsTable.personAId, person.id),
               eq(connectionsTable.personBId, match.id),
@@ -379,11 +398,13 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
               eq(connectionsTable.personAId, match.id),
               eq(connectionsTable.personBId, person.id),
             ),
+            ),
           ),
         );
       if (!alreadyConnected) {
         await db.insert(connectionsTable).values({
           id: randomUUID(),
+          ownerId,
           personAId: person.id,
           personBId: match.id,
           relationshipType: "Mentioned connection",
@@ -402,7 +423,8 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
 });
 
 router.get("/reconnects", async (_req, res): Promise<void> => {
-  const people = await db.select().from(peopleTable).orderBy(peopleTable.name);
+  const ownerId = currentUser(res).id;
+  const people = await db.select().from(peopleTable).where(eq(peopleTable.ownerId, ownerId)).orderBy(peopleTable.name);
   const prompts = await Promise.all(
     people
       .map((person) => ({
@@ -414,7 +436,7 @@ router.get("/reconnects", async (_req, res): Promise<void> => {
         const [lastInteraction] = await db
           .select({ summary: interactionsTable.summary })
           .from(interactionsTable)
-          .where(eq(interactionsTable.personId, person.id))
+          .where(and(eq(interactionsTable.personId, person.id), eq(interactionsTable.ownerId, ownerId)))
           .orderBy(desc(interactionsTable.date))
           .limit(1);
         return {
@@ -429,9 +451,10 @@ router.get("/reconnects", async (_req, res): Promise<void> => {
 });
 
 router.get("/graph", async (_req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const [people, connections] = await Promise.all([
-    db.select().from(peopleTable).orderBy(peopleTable.name),
-    db.select().from(connectionsTable),
+    db.select().from(peopleTable).where(eq(peopleTable.ownerId, ownerId)).orderBy(peopleTable.name),
+    db.select().from(connectionsTable).where(eq(connectionsTable.ownerId, ownerId)),
   ]);
   const initials = (name: string) =>
     name
@@ -456,3 +479,4 @@ router.get("/graph", async (_req, res): Promise<void> => {
 });
 
 export default router;
+

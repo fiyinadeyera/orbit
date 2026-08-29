@@ -358,9 +358,21 @@ export async function customFetch<T = unknown>(
     }
   }
 
+  // Web auth uses an HttpOnly session cookie. Mutations also echo the readable
+  // CSRF cookie into a header; the API rejects state-changing requests without it.
+  if (typeof document !== "undefined" && !["GET", "HEAD", "OPTIONS"].includes(method)) {
+    const csrf = document.cookie
+      .split("; ")
+      .find((part) => part.startsWith("orbit_csrf="))
+      ?.slice("orbit_csrf=".length);
+    if (csrf && !headers.has("x-csrf-token")) {
+      headers.set("x-csrf-token", decodeURIComponent(csrf));
+    }
+  }
+
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const response = await fetch(input, { ...init, method, headers, credentials: init.credentials ?? "include" });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
@@ -369,3 +381,4 @@ export async function customFetch<T = unknown>(
 
   return (await parseSuccessBody(response, responseType, requestInfo)) as T;
 }
+

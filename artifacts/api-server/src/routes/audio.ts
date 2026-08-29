@@ -1,5 +1,6 @@
 import express, { Router, type IRouter } from "express";
 import { ensureCompatibleFormat, speechToText } from "@workspace/integrations-openai-ai-server/audio";
+import { aiDailyQuota } from "../middleware/rate-limit";
 
 const router: IRouter = Router();
 
@@ -9,6 +10,7 @@ const router: IRouter = Router();
 // tool models binary payloads well).
 router.post(
   "/transcribe",
+  aiDailyQuota,
   express.raw({ type: "*/*", limit: "25mb" }),
   async (req, res): Promise<void> => {
     if (!Buffer.isBuffer(req.body) || req.body.length === 0) {

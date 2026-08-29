@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -11,6 +11,8 @@ import GraphView from '@/pages/Graph';
 import Intros from '@/pages/Intros';
 import Search from '@/pages/Search';
 import NotFound from '@/pages/not-found';
+import Login from '@/pages/Login';
+import { authFetch, type AuthUser } from '@/lib-auth';
 import {
   Route,
   Switch,
@@ -51,6 +53,21 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 }
 
 function App() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    authFetch<{ user: AuthUser }>('/api/auth/me')
+      .then((result) => setUser(result.user))
+      .catch(() => setUser(null))
+      .finally(() => setChecking(false));
+  }, []);
+
+  if (checking) {
+    return <div className="min-h-[100dvh] grid place-items-center text-sm text-muted-foreground">Opening Orbit…</div>;
+  }
+  if (!user) return <Login onAuthenticated={setUser} />;
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

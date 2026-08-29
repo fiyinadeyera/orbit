@@ -4,13 +4,43 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
+
+export const usersTable = pgTable(
+  "users",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("users_email_unique").on(table.email)],
+);
+
+export const sessionsTable = pgTable("sessions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: varchar("user_id", { length: 64 })
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const peopleTable = pgTable("people", {
   id: varchar("id", { length: 64 }).primaryKey(),
+  ownerId: varchar("owner_id", { length: 64 })
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   company: text("company"),
   role: text("role"),
@@ -31,6 +61,9 @@ export const peopleTable = pgTable("people", {
 
 export const interactionsTable = pgTable("interactions", {
   id: varchar("id", { length: 64 }).primaryKey(),
+  ownerId: varchar("owner_id", { length: 64 })
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
   personId: varchar("person_id", { length: 64 })
     .notNull()
     .references(() => peopleTable.id, { onDelete: "cascade" }),
@@ -41,6 +74,9 @@ export const interactionsTable = pgTable("interactions", {
 
 export const connectionsTable = pgTable("connections", {
   id: varchar("id", { length: 64 }).primaryKey(),
+  ownerId: varchar("owner_id", { length: 64 })
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
   personAId: varchar("person_a_id", { length: 64 })
     .notNull()
     .references(() => peopleTable.id, { onDelete: "cascade" }),
@@ -50,6 +86,11 @@ export const connectionsTable = pgTable("connections", {
   relationshipType: text("relationship_type").notNull(),
   notes: text("notes"),
 });
+
+export const usersRelations = relations(usersTable, ({ many }) => ({
+  people: many(peopleTable),
+  sessions: many(sessionsTable),
+}));
 
 export const peopleRelations = relations(peopleTable, ({ many }) => ({
   interactions: many(interactionsTable),
@@ -63,10 +104,11 @@ export const interactionsRelations = relations(interactionsTable, ({ one }) => (
 }));
 
 export const insertPersonSchema = createInsertSchema(peopleTable).omit({
+  ownerId: true,
   createdAt: true,
 });
-export const insertInteractionSchema = createInsertSchema(interactionsTable);
-export const insertConnectionSchema = createInsertSchema(connectionsTable);
+export const insertInteractionSchema = createInsertSchema(interactionsTable).omit({ ownerId: true });
+export const insertConnectionSchema = createInsertSchema(connectionsTable).omit({ ownerId: true });
 
 export type Person = typeof peopleTable.$inferSelect;
 export type Interaction = typeof interactionsTable.$inferSelect;

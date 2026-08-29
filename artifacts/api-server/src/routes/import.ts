@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import { ImportContactsBody, ImportContactsResponse } from "@workspace/api-zod";
 import { db, peopleTable } from "@workspace/db";
+import { currentUser } from "../middleware/auth";
 
 const router: IRouter = Router();
 
@@ -9,6 +11,7 @@ const router: IRouter = Router();
 // export later). Each source only has to map its rows to { name, email, phone,
 // company } and post them here; dedupe and persistence live in one place.
 router.post("/people/import", async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
   const parsed = ImportContactsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -18,7 +21,10 @@ router.post("/people/import", async (req, res): Promise<void> => {
   // Dedupe by case-insensitive name against everyone already in the network,
   // and against earlier rows in this same batch, so re-running an import or a
   // contact list with repeats never creates duplicate people.
-  const existing = await db.select({ name: peopleTable.name }).from(peopleTable);
+  const existing = await db
+    .select({ name: peopleTable.name })
+    .from(peopleTable)
+    .where(eq(peopleTable.ownerId, ownerId));
   const seen = new Set(existing.map((p) => p.name.trim().toLowerCase()));
 
   const rows: (typeof peopleTable.$inferInsert)[] = [];
@@ -44,6 +50,7 @@ router.post("/people/import", async (req, res): Promise<void> => {
 
     rows.push({
       id: randomUUID(),
+      ownerId,
       name,
       company: contact.company?.trim() || null,
       role: contact.role?.trim() || null,
@@ -71,3 +78,4 @@ router.post("/people/import", async (req, res): Promise<void> => {
 });
 
 export default router;
+

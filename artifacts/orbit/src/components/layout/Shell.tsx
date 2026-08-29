@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
-import { Mic, Users, Network, Sparkles, Search } from 'lucide-react';
+import { Mic, Users, Network, Sparkles, Search, LogOut } from 'lucide-react';
+import { authFetch } from '@/lib-auth';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -52,6 +53,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
             );
           })}
         </div>
+        <button
+          className="mt-auto flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+          onClick={async () => { await authFetch('/api/auth/logout', { method: 'POST' }); window.location.assign('/'); }}
+          type="button"
+        >
+          <LogOut className="w-4 h-4" /> Sign out
+        </button>
       </nav>
 
       {/* Mobile top brand bar */}
@@ -98,3 +106,4 @@ export function Shell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
