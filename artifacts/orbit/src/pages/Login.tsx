@@ -34,7 +34,7 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="font-serif text-3xl">Orbit</CardTitle>
-          <CardDescription>{mode === 'login' ? 'Sign in to your relationship network.' : 'Create your private Orbit account.'}</CardDescription>
+          <CardDescription>{mode === 'login' ? 'Sign in to your network universe.' : 'Create your private Orbit account.'}</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={submit}>
