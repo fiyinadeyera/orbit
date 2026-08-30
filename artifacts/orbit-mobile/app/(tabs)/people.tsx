@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 26,
   },
   subtitle: {

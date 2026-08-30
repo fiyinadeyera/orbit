@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   wordmark: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 34,
     letterSpacing: -0.8,
   },
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   voicePrompt: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 26,
   },
   voiceSubtitle: {

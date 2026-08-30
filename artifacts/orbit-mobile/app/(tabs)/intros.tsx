@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 8 },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 26 },
+  title: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 26 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12.5, marginTop: 2 },
   refresh: {
     width: 40,
