@@ -18,13 +18,19 @@ services:
     branch: main
     autoDeploy: true
     healthCheckPath: /api/healthz
-    # pnpm monorepo: pin pnpm via corepack, install, then esbuild-bundle the API.
+    # pnpm monorepo. Notes:
+    # - strict-dep-builds=false: Render sets CI=true, which turns pnpm's
+    #   "ignored build scripts" notice (esbuild's postinstall) into a hard
+    #   failure. esbuild still runs fine from its platform binary package, so
+    #   we allow the install to proceed.
+    # - build/start call node directly instead of `pnpm run`, because pnpm's
+    #   pre-run dependency check would re-run the install and fail the same way.
     buildCommand: >-
       corepack enable &&
       corepack prepare pnpm@11.24.0 --activate &&
-      pnpm install --frozen-lockfile &&
-      pnpm --filter @workspace/api-server build
-    startCommand: pnpm --filter @workspace/api-server start
+      pnpm install --frozen-lockfile --config.strict-dep-builds=false &&
+      cd artifacts/api-server && node build.mjs
+    startCommand: cd artifacts/api-server && node --enable-source-maps dist/index.mjs
     envVars:
       # Render provides PORT automatically; the server already reads process.env.PORT.
       - key: NODE_VERSION
