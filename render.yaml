@@ -1,0 +1,45 @@
+# Render Blueprint for Orbit
+#
+# Deploys the Orbit API server so the mobile app (and a future hosted web app)
+# talk to a stable public URL instead of a Mac on the local network.
+#
+# Secrets are NOT stored here. Env vars marked `sync: false` are set once in the
+# Render dashboard (Blueprint -> Environment), never committed. The Neon
+# DATABASE_URL and the Anthropic + OpenAI keys go there.
+#
+# To use: push this file, then in Render: New -> Blueprint -> pick this repo.
+
+services:
+  - type: web
+    name: orbit-api
+    runtime: node
+    plan: free # free spins down after ~15 min idle (cold start ~50s); bump to starter to keep warm
+    region: oregon
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /api/healthz
+    # pnpm monorepo: pin pnpm via corepack, install, then esbuild-bundle the API.
+    buildCommand: >-
+      corepack enable &&
+      corepack prepare pnpm@11.24.0 --activate &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @workspace/api-server build
+    startCommand: pnpm --filter @workspace/api-server start
+    envVars:
+      # Render provides PORT automatically; the server already reads process.env.PORT.
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      # Non-secret defaults (safe to commit).
+      - key: AI_INTEGRATIONS_ANTHROPIC_BASE_URL
+        value: https://api.anthropic.com
+      - key: AI_INTEGRATIONS_OPENAI_BASE_URL
+        value: https://api.openai.com/v1
+      # Secrets: set these in the Render dashboard, not in this file.
+      - key: DATABASE_URL
+        sync: false
+      - key: AI_INTEGRATIONS_ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_INTEGRATIONS_OPENAI_API_KEY
+        sync: false
