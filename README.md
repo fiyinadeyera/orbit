@@ -1,6 +1,6 @@
 # Orbit
 
-Orbit is a personal relationship intelligence app built to make capturing a person fast enough to do in the moment. The product rule is simple: a new person should take under 30 seconds to capture.
+Orbit is your personal relationship intelligence layer. Capture anyone in 30 seconds, know when to reconnect, and always know who's in your corner.
 
 The app combines a React interface, a TypeScript and Express API, PostgreSQL, and AI-assisted extraction. Claude turns quick notes into structured relationship data, while the wider workspace also includes OpenAI-backed voice transcription and image support.
 

@@ -1,6 +1,8 @@
 # Orbit
 
-Orbit is a relationship-intelligence journal: capture natural-language notes about people you meet, and it extracts who they are, auto-links mentioned connections, and reminds you when it's time to reconnect.
+Orbit is your personal relationship intelligence layer. Capture anyone in 30 seconds, know when to reconnect, and always know who's in your corner.
+
+Under the hood it works as a relationship-intelligence journal: capture natural-language notes about people you meet, and it extracts who they are, auto-links mentioned connections, and reminds you when it's time to reconnect.
 
 ## Run & Operate
 

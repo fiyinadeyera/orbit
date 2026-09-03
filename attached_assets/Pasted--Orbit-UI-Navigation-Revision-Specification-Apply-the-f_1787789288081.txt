@@ -167,7 +167,7 @@ Avoid filling this screen with:
 * graphs
 * lists
 * complicated navigation
-* CRM-style forms
+* heavy data-entry forms
 
 The user should be able to open Orbit and begin recording within seconds.
 
