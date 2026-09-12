@@ -65,8 +65,8 @@ export default function GraphView() {
   return (
     <div className="space-y-6 h-[calc(100vh-6rem)] flex flex-col">
       <div>
-        <h1 className="text-3xl font-serif font-bold text-foreground">Network Graph</h1>
-        <p className="text-muted-foreground mt-1">Visualize your relationships and clusters.</p>
+        <h1 className="text-3xl font-serif font-bold text-foreground">Network Map</h1>
+        <p className="text-muted-foreground mt-1">See how the people in your network connect.</p>
       </div>
 
       <Card className="flex-1 relative overflow-hidden bg-card/50 border-border/80 rounded-2xl shadow-sm">
@@ -74,7 +74,7 @@ export default function GraphView() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-pulse flex flex-col items-center gap-4 text-muted-foreground">
               <Network className="w-8 h-8 opacity-50" />
-              <p>Mapping network...</p>
+              <p>Connecting the dots...</p>
             </div>
           </div>
         ) : !graph || graph.nodes.length === 0 ? (
