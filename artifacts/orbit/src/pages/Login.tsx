@@ -12,7 +12,11 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() =>
+    new URLSearchParams(window.location.search).get('auth_error') === 'google'
+      ? 'Google sign-in did not complete. Please try again.'
+      : '',
+  );
   const [busy, setBusy] = useState(false);
 
   async function submit(event: FormEvent) {
@@ -78,6 +82,14 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
             <Button className="w-full" disabled={busy} type="submit">{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</Button>
             <Button className="w-full" type="button" variant="ghost" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); }}>
               {mode === 'login' ? 'Create an account' : 'I already have an account'}
+            </Button>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              or
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <Button className="w-full" type="button" variant="outline" disabled={busy} onClick={() => { window.location.href = '/api/auth/google'; }}>
+              Continue with Google
             </Button>
           </form>
         </CardContent>

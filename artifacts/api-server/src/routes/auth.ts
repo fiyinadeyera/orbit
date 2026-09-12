@@ -26,7 +26,7 @@ const BOOTSTRAP_OWNER_ID = "orbit-bootstrap-owner";
 export const DEMO_EMAIL = "demo@orbit.app";
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "orbitdemo123";
 
-function normalizeEmail(value: unknown) {
+export function normalizeEmail(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
 
@@ -45,20 +45,19 @@ async function verifyPassword(password: string, stored: string) {
 }
 
 export async function ensureDemoUser() {
-  const email = normalizeEmail(DEMO_EMAIL);
   const [existing] = await db
     .select({ id: usersTable.id })
     .from(usersTable)
-    .where(eq(usersTable.email, email));
+    .where(eq(usersTable.email, DEMO_EMAIL));
   if (existing) return;
   const passwordHash = await hashPassword(DEMO_PASSWORD);
   await db
     .insert(usersTable)
-    .values({ id: randomUUID(), email, passwordHash })
+    .values({ id: randomUUID(), email: DEMO_EMAIL, passwordHash })
     .onConflictDoNothing({ target: usersTable.email });
 }
 
-async function startSession(userId: string, res: Parameters<typeof setAuthCookies>[0]) {
+export async function startSession(userId: string, res: Parameters<typeof setAuthCookies>[0]) {
   const sessionToken = newToken();
   const csrfToken = newToken();
   await db.insert(sessionsTable).values({
