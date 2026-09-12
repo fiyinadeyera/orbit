@@ -65,7 +65,7 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
             <Button className="h-12 w-full text-base font-semibold shadow-md" type="button" disabled={busy} onClick={demoLogin}>
               {busy ? 'Opening demo…' : 'Open the live demo'}
             </Button>
-            <p className="mt-2 text-center text-xs text-muted-foreground">No sign-up needed</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">No sign-up needed. First load can take up to a minute if the app is waking up, thanks for your patience.</p>
           </div>
           <form className="space-y-4" onSubmit={submit}>
             <div className="space-y-2">
