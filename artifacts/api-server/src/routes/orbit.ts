@@ -30,6 +30,8 @@ import {
   type Person,
 } from "@workspace/db";
 import { extractRelationship } from "../lib/relationship-extraction";
+import { completeClaude } from "../lib/claude";
+import { searchPersonContext } from "../lib/exa";
 import { reverseGeocode } from "../lib/geocoding";
 import { currentUser } from "../middleware/auth";
 import { aiDailyQuota } from "../middleware/rate-limit";
@@ -213,6 +215,56 @@ router.delete("/people/:id", async (req, res): Promise<void> => {
   await db.delete(peopleTable).where(and(eq(peopleTable.id, person.id), eq(peopleTable.ownerId, ownerId)));
 
   res.sendStatus(204);
+});
+
+// Enrich a person from public web context (Exa search), summarized by Claude.
+// Read-only: returns a short dossier plus its sources; it does not mutate the
+// person. The client decides whether to save anything into their notes.
+router.post("/people/:id/enrich", aiDailyQuota, async (req, res): Promise<void> => {
+  const ownerId = currentUser(res).id;
+  const params = GetPersonParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [person] = await db
+    .select()
+    .from(peopleTable)
+    .where(and(eq(peopleTable.id, params.data.id), eq(peopleTable.ownerId, ownerId)));
+  if (!person) {
+    res.status(404).json({ error: "Person not found." });
+    return;
+  }
+
+  try {
+    const results = await searchPersonContext(person.name, person.company);
+    if (results.length === 0) {
+      res.json({ summary: null, sources: [] });
+      return;
+    }
+
+    const context = results
+      .map((r, i) => `[${i + 1}] ${r.title ?? r.url}\n${r.url}\n${(r.text ?? "").trim()}`)
+      .join("\n\n");
+    const prompt =
+      `You are enriching a professional contact profile from public web results. ` +
+      `Write a short, factual dossier as 3 to 5 tight bullet points about ` +
+      `${person.name}${person.company ? ` (${person.company})` : ""} based ONLY on the ` +
+      `sources below. Focus on what they do, recent news, and anything useful for ` +
+      `staying in touch. If the sources seem to describe a different person or are ` +
+      `inconclusive, say that plainly instead. Do not invent anything the sources do ` +
+      `not support, and do not add any preamble.\n\nSources:\n${context}`;
+
+    const summary = (await completeClaude(prompt, { maxTokens: 700 })).trim();
+    const sources = results.map((r) => ({ title: r.title ?? r.url, url: r.url }));
+    res.json({ summary, sources });
+  } catch (error) {
+    req.log.warn({ error }, "Person enrichment failed");
+    res.status(502).json({
+      error: error instanceof Error ? error.message : "Could not enrich this person.",
+    });
+  }
 });
 
 router.post("/people/:id/interactions", async (req, res): Promise<void> => {

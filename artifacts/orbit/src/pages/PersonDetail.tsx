@@ -17,9 +17,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { getInitials, formatDate } from '@/lib/utils';
-import { 
-  ArrowLeft, Edit2, Trash2, MapPin, Building, Briefcase, 
-  Calendar, Network, FileText, Plus, MessageSquare 
+import {
+  ArrowLeft, Edit2, Trash2, MapPin, Building, Briefcase,
+  Calendar, Network, FileText, Plus, MessageSquare, Sparkles, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -36,6 +36,11 @@ export default function PersonDetail() {
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [newInteraction, setNewInteraction] = useState('');
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichment, setEnrichment] = useState<{
+    summary: string | null;
+    sources: { title: string; url: string }[];
+  } | null>(null);
 
   if (isLoading) {
     return <div className="space-y-8 animate-pulse">
@@ -90,6 +95,28 @@ export default function PersonDetail() {
     }
   };
 
+  const handleEnrich = async () => {
+    setIsEnriching(true);
+    try {
+      const res = await fetch(`/api/people/${id}/enrich`, { method: 'POST' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || 'Enrichment failed.');
+      }
+      const data = await res.json();
+      setEnrichment(data);
+      if (data.summary) {
+        toast.success('Enriched from the web');
+      } else {
+        toast.info('No web results found for this person.');
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Enrichment failed.');
+    } finally {
+      setIsEnriching(false);
+    }
+  };
+
   const handleAddInteraction = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newInteraction.trim()) return;
@@ -141,6 +168,19 @@ export default function PersonDetail() {
         </div>
 
         <div className="flex gap-2 w-full md:w-auto">
+          <Button
+            variant="outline"
+            className="flex-1 md:flex-none"
+            onClick={handleEnrich}
+            disabled={isEnriching}
+          >
+            {isEnriching ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 mr-2" />
+            )}
+            Enrich
+          </Button>
           <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex-1 md:flex-none">
@@ -235,6 +275,35 @@ export default function PersonDetail() {
               )}
             </CardContent>
           </Card>
+
+          {enrichment?.summary && (
+            <Card className="bg-secondary/20 border-border/50 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" /> From the web
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{enrichment.summary}</p>
+                {enrichment.sources.length > 0 && (
+                  <div className="space-y-1 pt-3 border-t border-border/50">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sources</h4>
+                    {enrichment.sources.map((s, i) => (
+                      <a
+                        key={i}
+                        href={s.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block text-xs text-primary hover:underline truncate"
+                      >
+                        {s.title}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {person.connections.length > 0 && (
             <Card className="bg-secondary/20 border-border/50 shadow-sm">
