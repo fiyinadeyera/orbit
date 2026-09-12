@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { ensureDemoUser } from "./routes/auth";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,10 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Seed the hackathon demo account in the background; never block startup.
+  ensureDemoUser().then(
+    () => logger.info("Demo account ready"),
+    (seedErr) => logger.error({ err: seedErr }, "Failed to seed demo account"),
+  );
 });
