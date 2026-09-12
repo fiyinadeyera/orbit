@@ -57,7 +57,7 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="font-serif text-3xl">Orbit</CardTitle>
-          <CardDescription>{mode === 'login' ? 'Your network, connected and useful.' : 'Create your private Orbit account.'}</CardDescription>
+          <CardDescription>{mode === 'login' ? 'Your Network Universe' : 'Create your private Orbit account.'}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-6 rounded-xl border-2 border-primary bg-primary/10 p-3 shadow-sm">
