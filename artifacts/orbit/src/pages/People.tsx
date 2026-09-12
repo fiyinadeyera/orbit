@@ -37,12 +37,12 @@ export default function People() {
 
     createMutation.mutate({ data }, {
       onSuccess: () => {
-        toast.success('Person added manually.');
+        toast.success('Person added.');
         setIsAddOpen(false);
         queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() });
       },
       onError: () => {
-        toast.error('Failed to add person.');
+        toast.error("Couldn't add that person. Try again.");
       }
     });
   };
@@ -51,8 +51,8 @@ export default function People() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground">People Directory</h1>
-          <p className="text-muted-foreground mt-1">Your extended network and relationships.</p>
+          <h1 className="text-3xl font-serif font-bold text-foreground">People</h1>
+          <p className="text-muted-foreground mt-1">Everyone Orbit remembers, with the context that matters.</p>
         </div>
         
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -63,7 +63,7 @@ export default function People() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add Person</DialogTitle>
+              <DialogTitle>Add a person</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAddSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
@@ -85,12 +85,12 @@ export default function People() {
                 <Input name="location" placeholder="San Francisco" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Initial Notes</label>
+                <label className="text-sm font-medium">What should Orbit remember?</label>
                 <Input name="notes" placeholder="Met at a conference..." />
               </div>
               <DialogFooter className="pt-4">
                 <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Saving...' : 'Save Person'}
+                  {createMutation.isPending ? 'Saving...' : 'Save person'}
                 </Button>
               </DialogFooter>
             </form>
@@ -112,7 +112,7 @@ export default function People() {
           ) : reconnects.length === 0 ? (
             <Card className="bg-transparent border-dashed">
               <CardContent className="p-6 text-center text-muted-foreground text-sm">
-                Your network is fresh. Check back later for reconnect suggestions.
+                Everyone is up to date. Orbit will flag the right time to reconnect.
               </CardContent>
             </Card>
           ) : (
@@ -160,7 +160,7 @@ export default function People() {
           ))
         ) : people.length === 0 ? (
           <div className="col-span-full py-12 text-center text-muted-foreground bg-card/50 border border-dashed rounded-xl">
-            No people found. Try a different search or add someone new.
+            No matches. Try another search or add someone new.
           </div>
         ) : (
           people.map((person) => (
