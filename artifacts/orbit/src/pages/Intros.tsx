@@ -86,9 +86,9 @@ export default function Intros() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground">Introductions</h1>
+          <h1 className="text-3xl font-serif font-bold text-foreground">Warm intros</h1>
           <p className="text-muted-foreground mt-1">
-            Connections worth making across your network, ranked by mutual value.
+            People in your network who could help each other.
           </p>
         </div>
         <Button
@@ -98,16 +98,16 @@ export default function Intros() {
           disabled={isFetching}
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-          {isFetching ? 'Thinking...' : 'Refresh'}
+          {isFetching ? 'Connecting the dots...' : 'Find new intros'}
         </Button>
       </div>
 
       {isLoading ? (
         <div className="min-h-[40vh] flex flex-col items-center justify-center text-center gap-4">
           <Sparkles className="w-8 h-8 text-primary animate-pulse" />
-          <p className="text-lg font-serif text-foreground">Looking for introductions to make...</p>
+          <p className="text-lg font-serif text-foreground">Connecting the dots...</p>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Orbit is scanning your network for high, mutual-value connections.
+            Orbit is looking for people who could help each other.
           </p>
         </div>
       ) : isError ? (
@@ -124,7 +124,7 @@ export default function Intros() {
       ) : intros.length === 0 ? (
         <div className="min-h-[40vh] flex flex-col items-center justify-center text-center gap-3">
           <Users className="w-8 h-8 text-muted-foreground" />
-          <p className="text-lg font-serif text-foreground">No introductions yet</p>
+          <p className="text-lg font-serif text-foreground">No warm intros yet</p>
           <p className="text-sm text-muted-foreground max-w-sm">
             Capture a few more people, especially what they're working on or looking for, and
             Orbit will start spotting connections worth making.

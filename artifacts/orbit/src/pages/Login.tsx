@@ -14,7 +14,7 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
   const [password, setPassword] = useState('');
   const [error, setError] = useState(() =>
     new URLSearchParams(window.location.search).get('auth_error') === 'google'
-      ? 'Google sign-in did not complete. Please try again.'
+      ? "Google sign-in didn't finish. Try again."
       : '',
   );
   const [busy, setBusy] = useState(false);
@@ -57,13 +57,15 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="font-serif text-3xl">Orbit</CardTitle>
-          <CardDescription>{mode === 'login' ? 'Sign in to your network universe.' : 'Create your private Orbit account.'}</CardDescription>
+          <CardDescription>{mode === 'login' ? 'Your network, connected and useful.' : 'Create your private Orbit account.'}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-6">
-            <Button className="w-full" type="button" variant="secondary" size="sm" disabled={busy} onClick={demoLogin}>
-              Enter with the demo account
+          <div className="mb-6 rounded-xl border-2 border-primary bg-primary/10 p-3 shadow-sm">
+            <p className="mb-2 text-center text-sm font-semibold text-foreground">Judging Orbit? Start here.</p>
+            <Button className="h-12 w-full text-base font-semibold shadow-md" type="button" disabled={busy} onClick={demoLogin}>
+              {busy ? 'Opening demo…' : 'Open the live demo'}
             </Button>
+            <p className="mt-2 text-center text-xs text-muted-foreground">No sign-up needed</p>
           </div>
           <form className="space-y-4" onSubmit={submit}>
             <div className="space-y-2">
@@ -76,7 +78,7 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
               {mode === 'signup' && <p className="text-xs text-muted-foreground">At least 12 characters.</p>}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button className="w-full" disabled={busy} type="submit">{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</Button>
+            <Button className="w-full" disabled={busy} type="submit">{busy ? 'One moment…' : mode === 'login' ? 'Sign in' : 'Create account'}</Button>
             <Button className="w-full" type="button" variant="ghost" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); }}>
               {mode === 'login' ? 'Create an account' : 'I already have an account'}
             </Button>

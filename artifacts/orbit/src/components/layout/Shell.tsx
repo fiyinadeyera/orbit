@@ -5,7 +5,7 @@ import { authFetch } from '@/lib-auth';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: 'New Entry', icon: Mic },
+  { href: '/', label: 'Remember', icon: Mic },
   { href: '/people', label: 'People', icon: Users },
   { href: '/graph', label: 'Network Map', icon: Network },
   { href: '/intros', label: 'Intros', icon: Sparkles },
@@ -28,7 +28,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="font-serif text-2xl font-bold tracking-tight text-primary">
             Orbit
           </Link>
-          <p className="text-xs text-muted-foreground mt-1 tracking-wide">Your Network Universe</p>
+          <p className="text-xs text-muted-foreground mt-1 tracking-wide">Your network, working for you</p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -106,4 +106,3 @@ export function Shell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
