@@ -10,12 +10,59 @@ import type {
   IntroSuggestion,
 } from "./types";
 
-/** Strip an optional ```json fence the model may wrap its answer in. */
-function stripFence(value: string): string {
-  return value
-    .replace(/^\s*```(?:json)?\s*/i, "")
-    .replace(/\s*```\s*$/i, "")
+/** Pull the first complete JSON object or array out of model prose. */
+function extractJson(value: string): string | null {
+  const text = value
+    .replace(/```(?:json)?/gi, "")
+    .replace(/```/g, "")
     .trim();
+
+  for (let start = 0; start < text.length; start += 1) {
+    const opener = text[start];
+    if (opener !== "{" && opener !== "[") continue;
+
+    const stack: string[] = [];
+    let inString = false;
+    let escaped = false;
+
+    for (let i = start; i < text.length; i += 1) {
+      const char = text[i];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char === "\\") escaped = true;
+        else if (char === '"') inString = false;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = true;
+      } else if (char === "{" || char === "[") {
+        stack.push(char);
+      } else if (char === "}" || char === "]") {
+        const expected = char === "}" ? "{" : "[";
+        if (stack.pop() !== expected) break;
+        if (stack.length === 0) return text.slice(start, i + 1);
+      }
+    }
+  }
+
+  return null;
+}
+
+function parseModelJson(raw: string): unknown {
+  const candidate = extractJson(raw);
+  if (!candidate) throw new Error("The intro engine returned an unparseable response.");
+
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    // Models sometimes leave a comma before a closing bracket or brace.
+    try {
+      return JSON.parse(candidate.replace(/,\s*([}\]])/g, "$1"));
+    } catch {
+      throw new Error("The intro engine returned an unparseable response.");
+    }
+  }
 }
 
 type RawIntro = {
@@ -53,12 +100,7 @@ export function parseIntroSuggestions(
   connections: ExistingConnection[],
   limit: number,
 ): IntroSuggestion[] {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stripFence(raw));
-  } catch {
-    throw new Error("The intro engine returned an unparseable response.");
-  }
+  const parsed = parseModelJson(raw);
 
   const list: unknown = Array.isArray(parsed)
     ? parsed
