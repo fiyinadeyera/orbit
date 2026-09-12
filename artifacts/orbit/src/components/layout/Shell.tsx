@@ -28,7 +28,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="font-serif text-2xl font-bold tracking-tight text-primary">
             Orbit
           </Link>
-          <p className="text-xs text-muted-foreground mt-1 tracking-wide">Your network, working for you</p>
+          <p className="text-xs text-muted-foreground mt-1 tracking-wide">Your Network Universe</p>
         </div>
 
         <div className="flex flex-col gap-2">
