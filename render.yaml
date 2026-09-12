@@ -1,13 +1,13 @@
 # Render Blueprint for Orbit
 #
-# Deploys the Orbit API server so the mobile app (and a future hosted web app)
-# talk to a stable public URL instead of a Mac on the local network.
+# Two services:
+#   orbit-api  - the Express API (Node), the backend both clients talk to
+#   orbit-web  - the web app (static site) that proxies /api to orbit-api
 #
 # Secrets are NOT stored here. Env vars marked `sync: false` are set once in the
-# Render dashboard (Blueprint -> Environment), never committed. The Neon
-# DATABASE_URL and the Anthropic + OpenAI keys go there.
+# Render dashboard on the orbit-api service (DATABASE_URL, the AI keys, EXA).
 #
-# To use: push this file, then in Render: New -> Blueprint -> pick this repo.
+# To use: push this file, then in Render open the Blueprint and Sync.
 
 services:
   - type: web
@@ -49,3 +49,31 @@ services:
         sync: false
       - key: AI_INTEGRATIONS_OPENAI_API_KEY
         sync: false
+      - key: EXA_API_KEY
+        sync: false
+
+  - type: web
+    name: orbit-web
+    runtime: static
+    branch: main
+    autoDeploy: true
+    # Build the Vite web app. Notes:
+    # - typecheck:libs builds the workspace lib outputs the web bundle needs.
+    # - PORT/BASE_PATH are required by vite.config.ts even at build time.
+    buildCommand: >-
+      corepack enable &&
+      corepack prepare pnpm@11.24.0 --activate &&
+      pnpm install --frozen-lockfile --config.strict-dep-builds=false &&
+      pnpm run typecheck:libs &&
+      PORT=10000 BASE_PATH=/ pnpm --filter @workspace/orbit build
+    staticPublishPath: artifacts/orbit/dist/public
+    # /api is proxied to the API service so the browser stays same-origin
+    # (keeps the session cookie working); everything else falls back to the
+    # SPA entry so client-side routes resolve.
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://orbit-api-z3y6.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
