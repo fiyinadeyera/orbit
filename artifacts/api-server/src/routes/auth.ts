@@ -20,6 +20,12 @@ const router: IRouter = Router();
 const scrypt = promisify(scryptCallback);
 const BOOTSTRAP_OWNER_ID = "orbit-bootstrap-owner";
 
+// Demo account for hackathon judges: seeded on server start, credentials shown
+// on the login screen. It is a normal account, so owner-scoping and the daily
+// AI quota apply to it like anyone else.
+export const DEMO_EMAIL = "demo@orbit.app";
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "orbitdemo123";
+
 function normalizeEmail(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
@@ -36,6 +42,20 @@ async function verifyPassword(password: string, stored: string) {
   const expected = Buffer.from(keyText, "base64url");
   const actual = (await scrypt(password, Buffer.from(saltText, "base64url"), expected.length)) as Buffer;
   return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+export async function ensureDemoUser() {
+  const email = normalizeEmail(DEMO_EMAIL);
+  const [existing] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.email, email));
+  if (existing) return;
+  const passwordHash = await hashPassword(DEMO_PASSWORD);
+  await db
+    .insert(usersTable)
+    .values({ id: randomUUID(), email, passwordHash })
+    .onConflictDoNothing({ target: usersTable.email });
 }
 
 async function startSession(userId: string, res: Parameters<typeof setAuthCookies>[0]) {
