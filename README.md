@@ -1,6 +1,6 @@
 # Orbit
 
-Talk to it for 30 seconds after meeting someone. Orbit remembers everything, connects the dots across your entire network, and drafts warm intros between your contacts. Your network stops being a list and starts working for you.
+I built an AI memory layer for your network. Talk to Orbit for 30 seconds after meeting someone. It remembers who they are, connects them to people across your network, and drafts warm introductions automatically. Your network stops being a list and starts working for you.
 
 **Live app:** https://orbit-web-xg5f.onrender.com
 
