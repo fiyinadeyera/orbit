@@ -46,7 +46,7 @@ function makeLimiter(
 // Auth endpoints: limit by IP to slow password brute-force and signup spam.
 export const authRateLimit = makeLimiter(
   15 * 60 * 1000,
-  20,
+  100,
   (req) => req.ip ?? null,
   "Too many attempts. Please wait a few minutes and try again.",
 );
@@ -55,7 +55,7 @@ export const authRateLimit = makeLimiter(
 // OpenAI/Anthropic bill. A voice capture costs two (transcribe + extract).
 export const aiDailyQuota = makeLimiter(
   24 * 60 * 60 * 1000,
-  100,
+  1000,
   (_req, res) => currentUser(res)?.id ?? null,
   "You've reached today's limit for AI features. It resets in 24 hours.",
 );
