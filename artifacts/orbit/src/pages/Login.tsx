@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authFetch, type AuthUser } from '@/lib-auth';
 
+const DEMO_EMAIL = 'demo@orbit.app';
+const DEMO_PASSWORD = 'orbitdemo123';
+
 export default function Login({ onAuthenticated }: { onAuthenticated: (user: AuthUser) => void }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -20,6 +23,22 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
       const result = await authFetch<{ user: AuthUser }>(`/api/auth/${mode}`, {
         method: 'POST',
         body: JSON.stringify({ email, password }),
+      });
+      onAuthenticated(result.user);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not sign in.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function demoLogin() {
+    setBusy(true);
+    setError('');
+    try {
+      const result = await authFetch<{ user: AuthUser }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: DEMO_EMAIL, password: DEMO_PASSWORD }),
       });
       onAuthenticated(result.user);
     } catch (cause) {
@@ -53,6 +72,14 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
               {mode === 'login' ? 'Create an account' : 'I already have an account'}
             </Button>
           </form>
+          <div className="mt-6 rounded-md border border-dashed p-3 text-center space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Judging the hackathon? Demo login: <span className="font-medium text-foreground">{DEMO_EMAIL}</span> / <span className="font-medium text-foreground">{DEMO_PASSWORD}</span>
+            </p>
+            <Button className="w-full" type="button" variant="secondary" size="sm" disabled={busy} onClick={demoLogin}>
+              Enter with the demo account
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </main>
