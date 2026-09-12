@@ -58,12 +58,12 @@ services:
     branch: main
     autoDeploy: true
     # Build the Vite web app. Notes:
-    # - No `corepack enable` here: the static runtime's /usr/bin is read-only.
-    #   Render already provides pnpm (pinned via the root packageManager field).
+    # - No corepack and no version pin: the static runtime's /usr/bin is
+    #   read-only, and Render's built-in pnpm installs fine here.
     # - typecheck:libs builds the workspace lib outputs the web bundle needs.
     # - PORT/BASE_PATH are required by vite.config.ts even at build time.
     buildCommand: >-
-      pnpm install --frozen-lockfile --config.strict-dep-builds=false &&
+      pnpm install --frozen-lockfile &&
       pnpm run typecheck:libs &&
       PORT=10000 BASE_PATH=/ pnpm --filter @workspace/orbit build
     staticPublishPath: artifacts/orbit/dist/public
