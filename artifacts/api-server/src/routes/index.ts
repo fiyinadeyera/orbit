@@ -5,12 +5,14 @@ import introsRouter from "./intros";
 import importRouter from "./import";
 import audioRouter from "./audio";
 import authRouter from "./auth";
+import authGoogleRouter from "./auth-google";
 import { requireCsrf, requireUser } from "../middleware/auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(authGoogleRouter);
 router.use(requireUser);
 router.use(requireCsrf);
 router.use(orbitRouter);
@@ -19,4 +21,3 @@ router.use(importRouter);
 router.use(audioRouter);
 
 export default router;
-
