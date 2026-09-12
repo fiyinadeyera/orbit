@@ -60,8 +60,7 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
           <CardDescription>{mode === 'login' ? 'Sign in to your network universe.' : 'Create your private Orbit account.'}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-6 rounded-md border border-dashed p-3 text-center space-y-2">
-            <p className="text-xs text-muted-foreground">Judging the hackathon? Log in with the demo account.</p>
+          <div className="mb-6">
             <Button className="w-full" type="button" variant="secondary" size="sm" disabled={busy} onClick={demoLogin}>
               Enter with the demo account
             </Button>
