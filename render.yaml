@@ -13,7 +13,7 @@ services:
   - type: web
     name: orbit-api
     runtime: node
-    plan: free # free spins down after ~15 min idle (cold start ~50s); bump to starter to keep warm
+    plan: starter # always-on (no spin-down); ~$7/mo. Free spins down after ~15 min idle.
     region: oregon
     branch: main
     autoDeploy: true
