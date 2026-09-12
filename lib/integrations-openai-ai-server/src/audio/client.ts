@@ -219,7 +219,7 @@ export async function textToSpeechStream(
 /** Speech-to-Text using gpt-4o-mini-transcribe. */
 export async function speechToText(
   audioBuffer: Buffer,
-  format: "wav" | "mp3" | "webm" = "wav"
+  format: "wav" | "mp3" | "webm" | "mp4" | "ogg" = "wav"
 ): Promise<string> {
   const file = await toFile(audioBuffer, `audio.${format}`);
   const response = await openai.audio.transcriptions.create({
@@ -232,7 +232,7 @@ export async function speechToText(
 /** Streaming Speech-to-Text. */
 export async function speechToTextStream(
   audioBuffer: Buffer,
-  format: "wav" | "mp3" | "webm" = "wav"
+  format: "wav" | "mp3" | "webm" | "mp4" | "ogg" = "wav"
 ): Promise<AsyncIterable<string>> {
   const file = await toFile(audioBuffer, `audio.${format}`);
   const stream = await openai.audio.transcriptions.create({

@@ -1,5 +1,5 @@
 import express, { Router, type IRouter } from "express";
-import { ensureCompatibleFormat, speechToText } from "@workspace/integrations-openai-ai-server/audio";
+import { detectAudioFormat, speechToText } from "@workspace/integrations-openai-ai-server/audio";
 import { aiDailyQuota } from "../middleware/rate-limit";
 
 const router: IRouter = Router();
@@ -19,8 +19,13 @@ router.post(
     }
 
     try {
-      const { buffer, format } = await ensureCompatibleFormat(req.body);
-      const text = await speechToText(buffer, format);
+      // OpenAI's transcription accepts webm/mp4/ogg/wav/mp3 directly, so send
+      // the recording as-is instead of transcoding to WAV with ffmpeg (which
+      // isn't installed on the hosted runtime). Unknown magic bytes fall back
+      // to webm, the format browsers record by default.
+      const detected = detectAudioFormat(req.body);
+      const format = detected === "unknown" ? "webm" : detected;
+      const text = await speechToText(req.body, format);
       res.json({ text: text.trim() });
     } catch (error) {
       req.log.warn({ error }, "Speech transcription failed");

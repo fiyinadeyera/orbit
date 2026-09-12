@@ -61,9 +61,7 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
         </CardHeader>
         <CardContent>
           <div className="mb-6 rounded-md border border-dashed p-3 text-center space-y-2">
-            <p className="text-xs text-muted-foreground">
-              Judging the hackathon? Use the demo account: <span className="font-medium text-foreground">{DEMO_EMAIL}</span> / <span className="font-medium text-foreground">{DEMO_PASSWORD}</span>
-            </p>
+            <p className="text-xs text-muted-foreground">Judging the hackathon? Log in with the demo account.</p>
             <Button className="w-full" type="button" variant="secondary" size="sm" disabled={busy} onClick={demoLogin}>
               Enter with the demo account
             </Button>
