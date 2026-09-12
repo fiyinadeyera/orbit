@@ -1,15 +1,25 @@
 # Orbit
 
-Orbit is your personal relationship intelligence layer. Capture anyone in 30 seconds, know when to reconnect, and always know who's in your corner.
+Talk to it for 30 seconds after meeting someone. Orbit remembers everything, connects the dots across your entire network, and drafts warm intros between your contacts. Your network stops being a list and starts working for you.
 
-The app combines a React interface, a TypeScript and Express API, PostgreSQL, and AI-assisted extraction. Claude turns quick notes into structured relationship data, while the wider workspace also includes OpenAI-backed voice transcription and image support.
+**Live app:** https://orbit-web-xg5f.onrender.com
 
-## What it does
+## Try the demo
 
-- Captures people and relationship notes with a short, low-friction flow
-- Uses AI to extract structured details from unstructured notes
-- Keeps contact and relationship data in PostgreSQL
-- Includes relationship and introduction features in a minimal interface
+Use the one-click demo button on the login screen, or sign in with:
+
+- Email: `demo@orbit.app`
+- Password: `orbitdemo123`
+
+The demo account is shared and contains fictional sample data for judges. You can also create a private account with email and password or continue with Google.
+
+## What Orbit does
+
+- **Captures a meeting in your own words.** Record a short voice note or type what happened.
+- **Remembers the details.** Orbit transcribes the note and pulls out the person's name, role, company, interests, needs, and follow-ups for you to review.
+- **Connects the dots.** The network map shows how people in your network relate to one another.
+- **Finds useful introductions.** Orbit spots people who could help each other and drafts a warm intro you can edit and send.
+- **Keeps every account separate.** Email-and-password and Google sign-in each open a private workspace backed by PostgreSQL.
 
 ## Stack
 
@@ -17,14 +27,12 @@ The app combines a React interface, a TypeScript and Express API, PostgreSQL, an
 - Tailwind CSS
 - Express 5 API server
 - PostgreSQL with Drizzle ORM
-- Claude for note extraction
-- OpenAI integrations for voice transcription and image features
-- TanStack Query for client-side data access
+- OpenAI for voice transcription
+- Claude for structured extraction and intro drafts
+- TanStack Query
 - pnpm workspaces
 
 ## Repository layout
-
-This is a pnpm monorepo:
 
 - `artifacts/orbit` - React web app
 - `artifacts/api-server` - Express API server
@@ -38,7 +46,7 @@ This is a pnpm monorepo:
 
 ## Local setup
 
-Orbit requires Node.js, pnpm, and a PostgreSQL database. The workspace enforces pnpm during installation.
+Orbit requires Node.js, pnpm, and PostgreSQL. The workspace enforces pnpm during installation.
 
 ```bash
 git clone https://github.com/fiyinadeyera/orbit.git
@@ -74,11 +82,7 @@ pnpm --filter @workspace/api-server dev
 pnpm --filter @workspace/orbit dev
 ```
 
-The API expects `PORT` to be set. The included `.env.example` uses port `5000`.
-
 ## Checks and builds
-
-Run the workspace type checks and production builds from the repository root:
 
 ```bash
 pnpm run typecheck
