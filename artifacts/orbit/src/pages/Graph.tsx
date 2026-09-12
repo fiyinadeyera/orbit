@@ -8,35 +8,47 @@ import { Network } from 'lucide-react';
 export default function GraphView() {
   const { data: graph, isLoading } = useGetGraph();
   const [, setLocation] = useLocation();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+
   // Simple force-directed graph state
   const [positions, setPositions] = useState<Record<string, {x: number, y: number}>>({});
 
+  // Measure the visible card so the layout is centered on the real viewport,
+  // on phones as well as desktop.
   useEffect(() => {
-    if (!graph || graph.nodes.length === 0) return;
-    
-    // Initialize random positions
-    const initialPos: Record<string, {x: number, y: number}> = {};
-    const width = 800;
-    const height = 600;
-    
-    graph.nodes.forEach(node => {
-      initialPos[node.id] = {
-        x: Math.random() * width,
-        y: Math.random() * height
-      };
-    });
-    setPositions(initialPos);
-    
-    // We would ideally run a force-simulation loop here, but for a 
-    // static visually pleasing layout without massive dependencies,
-    // let's distribute them in a circle or simple grid.
+    const el = containerRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      setSize({
+        width: Math.max(rect.width, 280),
+        height: Math.max(rect.height, 280),
+      });
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [graph, isLoading]);
+
+  useEffect(() => {
+    if (!graph || graph.nodes.length === 0 || !size) return;
+
+    // Distribute nodes in a circle around the real center of the container.
+    const width = size.width;
+    const height = size.height;
     const layoutPos: Record<string, {x: number, y: number}> = {};
     const centerX = width / 2;
     const centerY = height / 2;
     const radius = Math.min(width, height) * 0.35;
-    
+
     graph.nodes.forEach((node, i) => {
       const angle = (i / graph.nodes.length) * 2 * Math.PI;
       layoutPos[node.id] = {
@@ -44,7 +56,7 @@ export default function GraphView() {
         y: centerY + radius * Math.sin(angle)
       };
     });
-    
+
     // Nudge connected nodes closer
     graph.edges.forEach(edge => {
       const p1 = layoutPos[edge.personAId];
@@ -60,7 +72,7 @@ export default function GraphView() {
     });
 
     setPositions(layoutPos);
-  }, [graph]);
+  }, [graph, size]);
 
   return (
     <div className="space-y-6 h-[calc(100vh-6rem)] flex flex-col">
@@ -82,46 +94,48 @@ export default function GraphView() {
             No connections established yet.
           </div>
         ) : (
-          <div className="absolute inset-0 overflow-auto">
-            <div className="relative w-[1200px] h-[800px] mx-auto my-auto min-h-full">
-              {/* Edges */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-border stroke-[1.5px] opacity-40">
-                {graph.edges.map(edge => {
-                  const p1 = positions[edge.personAId];
-                  const p2 = positions[edge.personBId];
-                  if (!p1 || !p2) return null;
+          <div ref={containerRef} className="absolute inset-0 overflow-hidden">
+            {size && (
+              <div className="relative" style={{ width: size.width, height: size.height }}>
+                {/* Edges */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-border stroke-[1.5px] opacity-40">
+                  {graph.edges.map(edge => {
+                    const p1 = positions[edge.personAId];
+                    const p2 = positions[edge.personBId];
+                    if (!p1 || !p2) return null;
+                    return (
+                      <line
+                        key={edge.id}
+                        x1={p1.x} y1={p1.y}
+                        x2={p2.x} y2={p2.y}
+                      />
+                    );
+                  })}
+                </svg>
+
+                {/* Nodes */}
+                {graph.nodes.map(node => {
+                  const pos = positions[node.id];
+                  if (!pos) return null;
                   return (
-                    <line 
-                      key={edge.id}
-                      x1={p1.x} y1={p1.y}
-                      x2={p2.x} y2={p2.y}
-                    />
+                    <div
+                      key={node.id}
+                      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
+                      style={{ left: pos.x, top: pos.y }}
+                      onClick={() => setLocation(`/people/${node.id}`)}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center shadow-sm group-hover:border-primary group-hover:scale-110 transition-all text-sm font-medium text-foreground">
+                        {node.initials}
+                      </div>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center font-medium border border-border">
+                        {node.name}
+                        {node.company && <div className="text-[10px] text-muted-foreground font-normal">{node.company}</div>}
+                      </div>
+                    </div>
                   );
                 })}
-              </svg>
-
-              {/* Nodes */}
-              {graph.nodes.map(node => {
-                const pos = positions[node.id];
-                if (!pos) return null;
-                return (
-                  <div 
-                    key={node.id}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                    style={{ left: pos.x, top: pos.y }}
-                    onClick={() => setLocation(`/people/${node.id}`)}
-                  >
-                    <div className="w-12 h-12 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center shadow-sm group-hover:border-primary group-hover:scale-110 transition-all text-sm font-medium text-foreground">
-                      {node.initials}
-                    </div>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center font-medium border border-border">
-                      {node.name}
-                      {node.company && <div className="text-[10px] text-muted-foreground font-normal">{node.company}</div>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </Card>

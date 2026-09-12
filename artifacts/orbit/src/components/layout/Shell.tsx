@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
-import { Mic, Users, Network, Sparkles, Search, LogOut } from 'lucide-react';
+import { Mic, Users, Network, Sparkles, LogOut } from 'lucide-react';
 import { authFetch } from '@/lib-auth';
 import { cn } from '@/lib/utils';
 
@@ -9,7 +9,6 @@ const navItems = [
   { href: '/people', label: 'People', icon: Users },
   { href: '/graph', label: 'Network Map', icon: Network },
   { href: '/intros', label: 'Intros', icon: Sparkles },
-  { href: '/search', label: 'Search', icon: Search },
 ];
 
 function isActiveHref(location: string, href: string) {
