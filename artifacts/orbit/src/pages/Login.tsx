@@ -56,6 +56,14 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
           <CardDescription>{mode === 'login' ? 'Sign in to your network universe.' : 'Create your private Orbit account.'}</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 rounded-md border border-dashed p-3 text-center space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Judging the hackathon? Use the demo account: <span className="font-medium text-foreground">{DEMO_EMAIL}</span> / <span className="font-medium text-foreground">{DEMO_PASSWORD}</span>
+            </p>
+            <Button className="w-full" type="button" variant="secondary" size="sm" disabled={busy} onClick={demoLogin}>
+              Enter with the demo account
+            </Button>
+          </div>
           <form className="space-y-4" onSubmit={submit}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -72,14 +80,6 @@ export default function Login({ onAuthenticated }: { onAuthenticated: (user: Aut
               {mode === 'login' ? 'Create an account' : 'I already have an account'}
             </Button>
           </form>
-          <div className="mt-6 rounded-md border border-dashed p-3 text-center space-y-2">
-            <p className="text-xs text-muted-foreground">
-              Judging the hackathon? Demo login: <span className="font-medium text-foreground">{DEMO_EMAIL}</span> / <span className="font-medium text-foreground">{DEMO_PASSWORD}</span>
-            </p>
-            <Button className="w-full" type="button" variant="secondary" size="sm" disabled={busy} onClick={demoLogin}>
-              Enter with the demo account
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </main>
