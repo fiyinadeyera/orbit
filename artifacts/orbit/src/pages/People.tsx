@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { useListPeople, useCreatePerson, useListReconnects, getListPeopleQueryKey } from '@workspace/api-client-react';
+import {
+  useListPeople,
+  useCreatePerson,
+  useListReconnects,
+  useAskNetwork,
+  getListPeopleQueryKey,
+} from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Input } from '@/components/ui/input';
@@ -9,42 +15,122 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { getInitials } from '@/lib/utils';
-import { Search, Plus, MapPin, Building, Briefcase, Clock } from 'lucide-react';
+import { Search, Plus, MapPin, Briefcase, Clock, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+type CardPerson = {
+  id: string;
+  name: string;
+  role?: string | null;
+  company?: string | null;
+  location?: string | null;
+  tags?: string[] | null;
+};
+
+// One card shape, used for both the full people list and the people an answer
+// refers to (which carry an extra reason line).
+function PersonCard({ person, reason }: { person: CardPerson; reason?: string }) {
+  const title = [person.role, person.company].filter(Boolean).join(' at ');
+  const tags = person.tags ?? [];
+
+  return (
+    <Link href={`/people/${person.id}`}>
+      <Card className="hover:border-primary/40 hover:shadow-md transition-all cursor-pointer h-full flex flex-col group">
+        <CardContent className="p-5 flex-1 flex flex-col">
+          <div className="flex items-start gap-4 mb-3">
+            <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
+              <AvatarFallback>{getInitials(person.name)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0 pt-1">
+              <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {person.name}
+              </h3>
+              {title && (
+                <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                  <Briefcase className="w-3 h-3" />
+                  {title}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {person.location && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+              <MapPin className="w-3 h-3" /> {person.location}
+            </div>
+          )}
+
+          {reason ? (
+            <p className="text-sm text-foreground/80 leading-relaxed mt-4">{reason}</p>
+          ) : (
+            <div className="mt-auto pt-4 flex flex-wrap gap-1.5">
+              {tags.slice(0, 3).map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-[10px] font-normal px-2 bg-secondary/50">
+                  {tag}
+                </Badge>
+              ))}
+              {tags.length > 3 && (
+                <Badge variant="secondary" className="text-[10px] font-normal px-1 bg-secondary/30">
+                  +{tags.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
 export default function People() {
-  const [search, setSearch] = useState('');
+  const [question, setQuestion] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const queryClient = useQueryClient();
-  
-  // Custom hook usage with search param mapped if needed, though API just takes raw params
-  const { data: people = [], isLoading } = useListPeople({ search: search || undefined });
+
+  const { data: people = [], isLoading } = useListPeople({});
   const { data: reconnects = [], isLoading: isLoadingReconnects } = useListReconnects();
-  
+  const ask = useAskNetwork();
   const createMutation = useCreatePerson();
+
+  const asked = Boolean(ask.data) && !ask.isPending;
+
+  const submitAsk = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const q = question.trim();
+    if (!q || ask.isPending) return;
+    ask.mutate({ data: { question: q } });
+  };
+
+  const clearAsk = () => {
+    setQuestion('');
+    ask.reset();
+  };
 
   const handleAddSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     const data = {
       name: formData.get('name') as string,
-      company: formData.get('company') as string || undefined,
-      role: formData.get('role') as string || undefined,
-      location: formData.get('location') as string || undefined,
-      notes: formData.get('notes') as string || undefined,
+      company: (formData.get('company') as string) || undefined,
+      role: (formData.get('role') as string) || undefined,
+      location: (formData.get('location') as string) || undefined,
+      notes: (formData.get('notes') as string) || undefined,
     };
 
-    createMutation.mutate({ data }, {
-      onSuccess: () => {
-        toast.success('Person added.');
-        setIsAddOpen(false);
-        queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() });
+    createMutation.mutate(
+      { data },
+      {
+        onSuccess: () => {
+          toast.success('Person added.');
+          setIsAddOpen(false);
+          queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() });
+        },
+        onError: () => {
+          toast.error("Couldn't add that person. Try again.");
+        },
       },
-      onError: () => {
-        toast.error("Couldn't add that person. Try again.");
-      }
-    });
+    );
   };
 
   return (
@@ -54,7 +140,7 @@ export default function People() {
           <h1 className="text-3xl font-serif font-bold text-foreground">People</h1>
           <p className="text-muted-foreground mt-1">Everyone Orbit remembers, with the context that matters.</p>
         </div>
-        
+
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button className="shrink-0 rounded-full shadow-sm">
@@ -143,71 +229,67 @@ export default function People() {
         </div>
       </section>
 
-      <div className="relative">
+      {/* Ask your network. Same column as the old search, now a plain-language box. */}
+      <form onSubmit={submitAsk} className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, company, or tags..." 
-          className="pl-9 h-12 rounded-xl bg-card border-border/50"
+        <Input
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask anything..."
+          className="pl-9 pr-10 h-12 rounded-xl bg-card border-border/50"
         />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          Array(6).fill(0).map((_, i) => (
-            <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />
-          ))
-        ) : people.length === 0 ? (
-          <div className="col-span-full py-12 text-center text-muted-foreground bg-card/50 border border-dashed rounded-xl">
-            No matches. Try another search or add someone new.
-          </div>
-        ) : (
-          people.map((person) => (
-            <Link key={person.id} href={`/people/${person.id}`}>
-              <Card className="hover:border-primary/40 hover:shadow-md transition-all cursor-pointer h-full flex flex-col group">
-                <CardContent className="p-5 flex-1 flex flex-col">
-                  <div className="flex items-start gap-4 mb-3">
-                    <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
-                      <AvatarFallback>{getInitials(person.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0 pt-1">
-                      <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                        {person.name}
-                      </h3>
-                      {person.role || person.company ? (
-                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                          <Briefcase className="w-3 h-3" />
-                          {[person.role, person.company].filter(Boolean).join(' at ')}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                  
-                  {person.location && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
-                      <MapPin className="w-3 h-3" /> {person.location}
-                    </div>
-                  )}
-
-                  <div className="mt-auto pt-4 flex flex-wrap gap-1.5">
-                    {person.tags?.slice(0, 3).map(tag => (
-                      <Badge key={tag} variant="secondary" className="text-[10px] font-normal px-2 bg-secondary/50">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {(person.tags?.length || 0) > 3 && (
-                      <Badge variant="secondary" className="text-[10px] font-normal px-1 bg-secondary/30">
-                        +{(person.tags?.length || 0) - 3}
-                      </Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))
+        {question && (
+          <button
+            type="button"
+            onClick={clearAsk}
+            aria-label="Clear"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </button>
         )}
-      </div>
+      </form>
+
+      {ask.isPending ? (
+        <div className="min-h-[30vh] flex flex-col items-center justify-center text-center gap-4">
+          <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+          <p className="text-lg font-serif text-foreground">Asking your network...</p>
+        </div>
+      ) : asked && ask.data ? (
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-5">
+              <p className="text-base text-foreground leading-relaxed">{ask.data.answer}</p>
+            </CardContent>
+          </Card>
+
+          {ask.data.matches.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {ask.data.matches.map((match) => (
+                <PersonCard key={match.person.id} person={match.person} reason={match.reason} />
+              ))}
+            </div>
+          )}
+
+          <Button variant="outline" size="sm" onClick={clearAsk}>
+            Show all people
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? (
+            Array(6)
+              .fill(0)
+              .map((_, i) => <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />)
+          ) : people.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-muted-foreground bg-card/50 border border-dashed rounded-xl">
+              No people yet. Capture someone, or add one manually.
+            </div>
+          ) : (
+            people.map((person) => <PersonCard key={person.id} person={person} />)
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -9,7 +9,6 @@ import People from '@/pages/People';
 import PersonDetail from '@/pages/PersonDetail';
 import GraphView from '@/pages/Graph';
 import Intros from '@/pages/Intros';
-import Ask from '@/pages/Ask';
 import Search from '@/pages/Search';
 import NotFound from '@/pages/not-found';
 import Login from '@/pages/Login';
@@ -40,7 +39,6 @@ function Router() {
           <Route path="/people/:id" component={PersonDetail} />
           <Route path="/graph" component={GraphView} />
           <Route path="/intros" component={Intros} />
-          <Route path="/ask" component={Ask} />
           <Route path="/search" component={Search} />
           <Route component={NotFound} />
         </Switch>
