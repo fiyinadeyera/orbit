@@ -109,6 +109,7 @@ Status = where Orbit is today. Bucket = priority for the "shippable free app" mi
 | Scheduled in-app Intros digest | Missing | Could |
 | Auto-enrichment / overnight research | Missing | Could |
 | Search / filter polish | Partial | Could |
+| Optional person photos (camera icon on capture) | Missing | Could |
 | Subscriptions / billing / paywall | Missing | Won't (yet) |
 | Shared / collaborative maps | Missing | Won't |
 | Referrals / growth loops | Missing | Won't |
@@ -202,6 +203,13 @@ Instrument the core-loop events: person captured, graph opened, returned next da
 - **Auto-enrichment / overnight research**: background job augments contacts from
   public info. The "did its own research overnight" behaviour from the post.
 - **Search / filter polish**.
+- **Optional person photos**: let a person carry a real photo, added from the
+  capture / first page via a small camera icon, so the avatar shows their face
+  instead of initials. Strictly optional and out of the way: keep the capture UI
+  clean and uncluttered, the icon must not compete with the core note flow. Note:
+  people have no photo field today, so this needs an image field on the person, a
+  small upload + storage path, and the avatar falling back to initials when
+  there's no photo.
 
 ## WON'T (yet) — explicitly excluded until usage is proven
 
