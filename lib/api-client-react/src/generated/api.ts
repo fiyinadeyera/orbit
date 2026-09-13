@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AskInput,
+  AskResult,
   CaptureConfirmInput,
   CaptureConfirmResult,
   CaptureExtractInput,
@@ -1034,4 +1036,75 @@ export function useListIntros<TData = Awaited<ReturnType<typeof listIntros>>, TE
 
 
 
+
+export const getAskNetworkUrl = () => {
+
+
+
+
+  return `/api/ask`
+}
+
+/**
+ * @summary Answer a natural-language question about the network
+ */
+export const askNetwork = async (askInput: AskInput, options?: Parameters<typeof customFetch>[1]): Promise<AskResult> => {
+
+  return customFetch<AskResult>(getAskNetworkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(askInput)
+  }
+);}
+
+
+
+
+
+export const getAskNetworkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askNetwork>>, TError,{data: BodyType<AskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof askNetwork>>, TError,{data: BodyType<AskInput>}, TContext> => {
+
+const mutationKey = ['askNetwork'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof askNetwork>>, {data: BodyType<AskInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  askNetwork(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AskNetworkMutationResult = NonNullable<Awaited<ReturnType<typeof askNetwork>>>
+    export type AskNetworkMutationBody = BodyType<AskInput>
+    export type AskNetworkMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Answer a natural-language question about the network
+ */
+export const useAskNetwork = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askNetwork>>, TError,{data: BodyType<AskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof askNetwork>>,
+        TError,
+        {data: BodyType<AskInput>},
+        TContext
+      > => {
+      return useMutation(getAskNetworkMutationOptions(options));
+    }
 

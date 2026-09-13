@@ -5,8 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
+export interface AskInput {
+  /** @minLength 1 */
+  question: string;
 }
 
 export interface Person {
@@ -30,6 +31,20 @@ export interface Person {
   lastContacted: string | null;
   tags: string[];
   createdAt: string;
+}
+
+export interface AskMatch {
+  person: Person;
+  reason: string;
+}
+
+export interface AskResult {
+  answer: string;
+  matches: AskMatch[];
+}
+
+export interface HealthStatus {
+  status: string;
 }
 
 export interface PersonInput {

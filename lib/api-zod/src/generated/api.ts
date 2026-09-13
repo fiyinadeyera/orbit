@@ -380,3 +380,35 @@ export const ListIntrosResponseItem = zod.object({
 export const ListIntrosResponse = zod.array(ListIntrosResponseItem)
 
 
+/**
+ * @summary Answer a natural-language question about the network
+ */
+
+
+
+export const AskNetworkBody = zod.object({
+  "question": zod.string().min(1)
+})
+
+export const AskNetworkResponse = zod.object({
+  "answer": zod.string(),
+  "matches": zod.array(zod.object({
+  "person": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "company": zod.string().nullable(),
+  "role": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "howMet": zod.string().nullable(),
+  "dateMet": zod.coerce.date().nullable(),
+  "notes": zod.string().nullable(),
+  "lookingFor": zod.string().nullable(),
+  "lastContacted": zod.coerce.date().nullable(),
+  "tags": zod.array(zod.string()),
+  "createdAt": zod.coerce.date()
+}),
+  "reason": zod.string()
+}))
+})
+
+

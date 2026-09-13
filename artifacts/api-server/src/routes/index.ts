@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import orbitRouter from "./orbit";
 import introsRouter from "./intros";
+import askRouter from "./ask";
 import importRouter from "./import";
 import audioRouter from "./audio";
 import authRouter from "./auth";
@@ -17,6 +18,7 @@ router.use(requireUser);
 router.use(requireCsrf);
 router.use(orbitRouter);
 router.use(introsRouter);
+router.use(askRouter);
 router.use(importRouter);
 router.use(audioRouter);
 

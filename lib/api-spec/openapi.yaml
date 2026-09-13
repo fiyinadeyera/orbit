@@ -229,8 +229,46 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/IntroSuggestion"
+  /ask:
+    post:
+      operationId: askNetwork
+      tags: [network]
+      summary: Answer a natural-language question about the network
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AskInput"
+      responses:
+        "200":
+          description: A grounded answer plus the people it refers to
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AskResult"
 components:
   schemas:
+    AskInput:
+      type: object
+      required: [question]
+      properties:
+        question: { type: string, minLength: 1 }
+    AskMatch:
+      type: object
+      required: [person, reason]
+      properties:
+        person: { $ref: "#/components/schemas/Person" }
+        reason: { type: string }
+    AskResult:
+      type: object
+      required: [answer, matches]
+      properties:
+        answer: { type: string }
+        matches:
+          type: array
+          items:
+            $ref: "#/components/schemas/AskMatch"
     HealthStatus:
       type: object
       properties:

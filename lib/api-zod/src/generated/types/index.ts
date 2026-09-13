@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './askInput';
+export * from './askMatch';
+export * from './askResult';
 export * from './captureConfirmInput';
 export * from './captureConfirmResult';
 export * from './captureExtractInput';
