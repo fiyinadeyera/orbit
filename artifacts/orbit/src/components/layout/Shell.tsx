@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Remember', icon: Mic },
+  { href: '/ask', label: 'Ask', icon: Search },
   { href: '/people', label: 'People', icon: Users },
   { href: '/graph', label: 'Network Map', icon: Network },
   { href: '/intros', label: 'Intros', icon: Sparkles },
-  { href: '/ask', label: 'Ask', icon: Search },
 ];
 
 function isActiveHref(location: string, href: string) {

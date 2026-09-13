@@ -31,6 +31,7 @@ import {
 } from "@workspace/db";
 import { extractRelationship } from "../lib/relationship-extraction";
 import { completeClaude } from "../lib/claude";
+import { markIntrosStale } from "../lib/intros-service";
 import { searchPersonContext } from "../lib/exa";
 import { reverseGeocode } from "../lib/geocoding";
 import { currentUser } from "../middleware/auth";
@@ -119,6 +120,7 @@ router.post("/people", async (req, res): Promise<void> => {
     })
     .returning();
 
+  markIntrosStale(ownerId);
   res.status(201).json(CreatePersonResponse.parse(personResponse(person)));
 });
 
@@ -466,6 +468,7 @@ router.post("/capture/confirm", async (req, res): Promise<void> => {
     }
   }
 
+  markIntrosStale(ownerId);
   res.status(201).json(
     ConfirmCaptureResponse.parse({
       person: personResponse(person),

@@ -1,32 +1,17 @@
-import { eq } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import { ListIntrosResponse } from "@workspace/api-zod";
-import { connectionsTable, db, peopleTable } from "@workspace/db";
-import { suggestIntros } from "@workspace/intro-engine";
-import { completeClaude } from "../lib/claude";
 import { currentUser } from "../middleware/auth";
-import { connectionToExisting, personToContact } from "../lib/intro-mapping";
-import { aiDailyQuota } from "../middleware/rate-limit";
+import { getIntros } from "../lib/intros-service";
 
 const router: IRouter = Router();
 
 // Proactive introductions: the highest likely-mutual-value pairings across the
-// network, scored by the intro engine. Read-only — surfacing suggestions, not
-// creating connections.
-router.get("/intros", aiDailyQuota, async (req, res): Promise<void> => {
+// network. Served from a per-owner cache (see intros-service) so the page opens
+// instantly and the LLM runs in the background, not on the request. Read-only.
+router.get("/intros", async (req, res): Promise<void> => {
   const ownerId = currentUser(res).id;
   try {
-    const [people, connections] = await Promise.all([
-      db.select().from(peopleTable).where(eq(peopleTable.ownerId, ownerId)).orderBy(peopleTable.name),
-      db.select().from(connectionsTable).where(eq(connectionsTable.ownerId, ownerId)),
-    ]);
-
-    const suggestions = await suggestIntros(
-      people.map(personToContact),
-      connections.map(connectionToExisting),
-      completeClaude,
-    );
-
+    const suggestions = await getIntros(ownerId);
     res.json(ListIntrosResponse.parse(suggestions));
   } catch (error) {
     req.log.warn({ error }, "Intro suggestion failed");
@@ -38,4 +23,3 @@ router.get("/intros", aiDailyQuota, async (req, res): Promise<void> => {
 });
 
 export default router;
-

@@ -4,6 +4,7 @@ import { Router, type IRouter } from "express";
 import { ImportContactsBody, ImportContactsResponse } from "@workspace/api-zod";
 import { db, peopleTable } from "@workspace/db";
 import { currentUser } from "../middleware/auth";
+import { markIntrosStale } from "../lib/intros-service";
 
 const router: IRouter = Router();
 
@@ -68,6 +69,7 @@ router.post("/people/import", async (req, res): Promise<void> => {
     ? await db.insert(peopleTable).values(rows).returning()
     : [];
 
+  if (people.length) markIntrosStale(ownerId);
   res.status(201).json(
     ImportContactsResponse.parse({
       imported: people.length,
