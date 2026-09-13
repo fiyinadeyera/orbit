@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { getInitials } from '@/lib/utils';
-import { Search, Plus, MapPin, Briefcase, Clock, Sparkles, X } from 'lucide-react';
+import { Search, Plus, Clock, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 type CardPerson = {
@@ -46,32 +46,23 @@ function PersonCard({ person, reason }: { person: CardPerson; reason?: string })
                 {person.name}
               </h3>
               {title && (
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                  <Briefcase className="w-3 h-3" />
-                  {title}
-                </p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{title}</p>
               )}
             </div>
           </div>
-
-          {person.location && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
-              <MapPin className="w-3 h-3" /> {person.location}
-            </div>
-          )}
 
           {reason ? (
             <p className="text-sm text-foreground/80 leading-relaxed mt-4">{reason}</p>
           ) : (
             <div className="mt-auto pt-4 flex flex-wrap gap-1.5">
-              {tags.slice(0, 3).map((tag) => (
+              {tags.slice(0, 2).map((tag) => (
                 <Badge key={tag} variant="secondary" className="text-[10px] font-normal px-2 bg-secondary/50">
                   {tag}
                 </Badge>
               ))}
-              {tags.length > 3 && (
+              {tags.length > 2 && (
                 <Badge variant="secondary" className="text-[10px] font-normal px-1 bg-secondary/30">
-                  +{tags.length - 3}
+                  +{tags.length - 2}
                 </Badge>
               )}
             </div>

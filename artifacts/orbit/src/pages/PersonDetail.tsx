@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { getInitials, formatDate } from '@/lib/utils';
 import {
-  ArrowLeft, Edit2, Trash2, MapPin, Building, Briefcase,
+  ArrowLeft, Edit2, Trash2,
   Calendar, Network, FileText, Plus, MessageSquare, Sparkles, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -151,10 +151,10 @@ export default function PersonDetail() {
           <div className="pt-2 flex-1">
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">{person.name}</h1>
             
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium">
-              {person.role && <div className="flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> {person.role}</div>}
-              {person.company && <div className="flex items-center gap-1.5"><Building className="w-4 h-4" /> {person.company}</div>}
-              {person.location && <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {person.location}</div>}
+            <div className="text-sm text-muted-foreground font-medium">
+              {[[person.role, person.company].filter(Boolean).join(' at '), person.location]
+                .filter(Boolean)
+                .join('  ·  ')}
             </div>
 
             <div className="flex flex-wrap gap-2 mt-4">
