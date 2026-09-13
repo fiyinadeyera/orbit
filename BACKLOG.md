@@ -3,6 +3,35 @@
 Features to build, prioritized MoSCoW-style and grounded in what Orbit already
 has. This is a backlog of specs, not a committed sprint order.
 
+## Current priority call (2026-09-12, Fiyin)
+
+The near-term ranking in Fiyin's own words. This is the current call and takes
+precedence over the bucket order below.
+
+1. **The "ask your network" box.** The pitch says "ask your network and it
+   answers." Right now that's a search bar with tags. A real natural-language
+   ask box closes the gap between the story and the product. It's the feature
+   the marketing already promised.
+   **Top pick: if only one thing gets built, build this. It's the product.**
+
+2. **Contact aggregation.** Start with Google Contacts (easiest, Fiyin lives in
+   Google), then iPhone contacts via the iOS app. LinkedIn last: their API is a
+   fortress, so go the export route. (See the "Network import" item under SHOULD
+   for the current shipped-status per source.)
+
+3. **Speed.** The Intros page took about a minute cold during judging today.
+   Precompute intros in the background so they open instantly. Boring, but it's
+   the difference between "cool demo" and "tool I trust."
+
+Housekeeping to ride along:
+
+- A real privacy policy page (Google needs it for the login button to stay live).
+- A demo-reset so the seeded data stays fresh.
+
+On the iOS app (already logged): the real prize isn't "native", it's **push
+notifications.** That's when "nudges you to reconnect" becomes something Orbit
+does to you, instead of something you have to open the app to see.
+
 ## Key insight: Orbit was built out of order
 
 Orbit was built top-down. The exciting top-of-stack work exists (core loop,
