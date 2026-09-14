@@ -12,6 +12,7 @@ import Intros from '@/pages/Intros';
 import Search from '@/pages/Search';
 import NotFound from '@/pages/not-found';
 import Login from '@/pages/Login';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import { authFetch, type AuthUser } from '@/lib-auth';
 import {
   Route,
@@ -62,6 +63,12 @@ function App() {
       .catch(() => setUser(null))
       .finally(() => setChecking(false));
   }, []);
+
+  // Public page: reachable without login, so the Google OAuth consent screen
+  // can link to it and anyone can read it before signing in.
+  if (window.location.pathname.replace(/\/+$/, '').endsWith('/privacy')) {
+    return <PrivacyPolicy />;
+  }
 
   if (checking) {
     return <div className="min-h-[100dvh] grid place-items-center text-sm text-muted-foreground">Opening Orbit…</div>;
