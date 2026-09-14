@@ -4,16 +4,9 @@
 // separate concern.) Mirrors the mobile mapper so both platforms normalise
 // Google people the same way.
 
-export const GOOGLE_CONTACTS_SCOPE = 'https://www.googleapis.com/auth/contacts.readonly';
+import type { ImportCandidate } from './importCandidates';
 
-export type ImportCandidate = {
-  key: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  role?: string;
-};
+export const GOOGLE_CONTACTS_SCOPE = 'https://www.googleapis.com/auth/contacts.readonly';
 
 // The Web OAuth client id from the Google Cloud Console, injected at build time
 // as a Vite env var. Undefined until the owner sets it (see GOOGLE_SETUP.md);

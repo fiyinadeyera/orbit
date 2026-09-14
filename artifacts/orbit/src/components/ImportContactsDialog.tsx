@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useImportContacts, getListPeopleQueryKey } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -12,32 +12,37 @@ import {
 } from '@/components/ui/dialog';
 import { Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  GOOGLE_CONTACTS_SCOPE,
-  fetchGoogleContacts,
-  getGoogleClientId,
-  type ImportCandidate,
-} from '@/lib/googleContacts';
+import { dedupeAndSort, type ImportCandidate } from '@/lib/importCandidates';
+import { GOOGLE_CONTACTS_SCOPE, fetchGoogleContacts, getGoogleClientId } from '@/lib/googleContacts';
 import { requestGoogleAccessToken } from '@/lib/googleAuth';
+import { parseLinkedInConnections } from '@/lib/linkedinCsv';
 
-type Step = 'start' | 'loading' | 'review' | 'importing';
+type Step = 'choose' | 'loading' | 'review' | 'importing';
 
 export function ImportContactsDialog() {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<Step>('start');
+  const [step, setStep] = useState<Step>('choose');
   const [candidates, setCandidates] = useState<ImportCandidate[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
   const importMutation = useImportContacts();
   const clientId = getGoogleClientId();
 
   const reset = () => {
-    setStep('start');
+    setStep('choose');
     setCandidates([]);
     setSelected(new Set());
     setError(null);
+  };
+
+  const toReview = (found: ImportCandidate[]) => {
+    const unique = dedupeAndSort(found);
+    setCandidates(unique);
+    setSelected(new Set(unique.map((c) => c.key)));
+    setStep('review');
   };
 
   const connectGoogle = async () => {
@@ -46,17 +51,27 @@ export function ImportContactsDialog() {
     setStep('loading');
     try {
       const token = await requestGoogleAccessToken(clientId, GOOGLE_CONTACTS_SCOPE);
-      const found = await fetchGoogleContacts(token);
-      // Dedupe by name for a clean review list; the server dedupes again on import.
-      const byKey = new Map<string, ImportCandidate>();
-      for (const candidate of found) if (!byKey.has(candidate.key)) byKey.set(candidate.key, candidate);
-      const unique = [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name));
-      setCandidates(unique);
-      setSelected(new Set(unique.map((c) => c.key)));
-      setStep('review');
+      toReview(await fetchGoogleContacts(token));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load your Google contacts.');
-      setStep('start');
+      setStep('choose');
+    }
+  };
+
+  const onLinkedInFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+    setError(null);
+    try {
+      const found = parseLinkedInConnections(await file.text());
+      if (found.length === 0) {
+        setError("No connections found. Make sure it's the LinkedIn Connections.csv file.");
+        return;
+      }
+      toReview(found);
+    } catch {
+      setError('Could not read that file.');
     }
   };
 
@@ -118,25 +133,37 @@ export function ImportContactsDialog() {
           <DialogTitle>Import contacts</DialogTitle>
         </DialogHeader>
 
-        {!clientId ? (
-          <div className="py-6 text-center text-sm text-muted-foreground space-y-2">
-            <p>Google import isn't configured yet.</p>
-            <p className="text-xs">Add a Google OAuth client id to switch it on (see GOOGLE_SETUP.md).</p>
-          </div>
-        ) : step === 'start' ? (
-          <div className="py-6 space-y-4 text-center">
+        {step === 'choose' ? (
+          <div className="py-4 space-y-4">
             <p className="text-sm text-muted-foreground">
-              Bring people in from Google. Orbit skips anyone already in your network.
+              Bring people in from Google or a LinkedIn export. Orbit skips anyone already in your network.
             </p>
-            <Button onClick={connectGoogle} className="rounded-full">
-              Continue with Google
+
+            {clientId ? (
+              <Button onClick={connectGoogle} variant="outline" className="w-full justify-center rounded-xl h-11">
+                Continue with Google
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center">
+                Google import isn't configured yet (see GOOGLE_SETUP.md).
+              </p>
+            )}
+
+            <input ref={fileInput} type="file" accept=".csv,text/csv" onChange={onLinkedInFile} hidden />
+            <Button
+              onClick={() => fileInput.current?.click()}
+              variant="outline"
+              className="w-full justify-center rounded-xl h-11"
+            >
+              Upload LinkedIn export (.csv)
             </Button>
-            {error && <p className="text-xs text-destructive">{error}</p>}
+
+            {error && <p className="text-xs text-destructive text-center">{error}</p>}
           </div>
         ) : step === 'loading' ? (
           <div className="py-10 flex flex-col items-center gap-3 text-sm text-muted-foreground">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            Loading your Google contacts...
+            Loading your contacts...
           </div>
         ) : step === 'review' ? (
           <>
