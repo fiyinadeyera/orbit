@@ -59,6 +59,29 @@ Run the app, People tab → import button → **Google contacts** → Continue w
 Google → sign in with a test user → your Google contacts appear in the same
 review-and-select screen as phone contacts.
 
+## Web app (the deployed Orbit)
+
+The steps above create the project, consent screen, and native client IDs for
+the Expo app. The web app (the deployed Orbit at `orbit-web`) needs one more
+client id, in the same project:
+
+1. APIs & Services → Credentials → Create credentials → OAuth client ID.
+2. Application type: **Web application**.
+3. Authorized JavaScript origins, add both:
+   - `https://orbit-web-xg5f.onrender.com` (production)
+   - `http://localhost:5173` (local dev)
+   No redirect URI is needed: the browser uses the Google Identity Services
+   token flow, not a redirect.
+4. Copy the client id and set it as a build-time env var `VITE_GOOGLE_CLIENT_ID`:
+   - Local: add `VITE_GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com` to
+     `artifacts/orbit/.env`.
+   - Render: on the `orbit-web` static site, add the same env var, then redeploy.
+5. Same consent screen as above. While the app is in "Testing", only the test
+   users you added can grant access, which is enough for you to use it now.
+
+Until `VITE_GOOGLE_CLIENT_ID` is set, the web Import dialog shows a friendly
+"not configured yet" message; nothing else is affected.
+
 ## Notes
 - This is a one-time data grant, not a login. Orbit uses the token to fetch
   contacts once and drops it; it never stores your Google password.

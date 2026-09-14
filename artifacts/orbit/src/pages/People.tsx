@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { getInitials } from '@/lib/utils';
 import { Search, Plus, Clock, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImportContactsDialog } from '@/components/ImportContactsDialog';
 
 type CardPerson = {
   id: string;
@@ -132,9 +133,11 @@ export default function People() {
           <p className="text-muted-foreground mt-1">Everyone Orbit remembers, with the context that matters.</p>
         </div>
 
+        <div className="flex items-center gap-2 shrink-0">
+        <ImportContactsDialog />
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button className="shrink-0 rounded-full shadow-sm">
+            <Button className="rounded-full shadow-sm">
               <Plus className="w-4 h-4 mr-2" /> Add manually
             </Button>
           </DialogTrigger>
@@ -173,6 +176,7 @@ export default function People() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <section className="space-y-4">
