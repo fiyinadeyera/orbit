@@ -7,7 +7,7 @@ import { Network } from 'lucide-react';
 import { track } from '@/lib/track';
 
 export default function GraphView() {
-  const { data: graph, isLoading } = useGetGraph();
+  const { data: graph, isLoading, isError } = useGetGraph();
   const [, setLocation] = useLocation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
@@ -93,6 +93,10 @@ export default function GraphView() {
               <Network className="w-8 h-8 opacity-50" />
               <p>Connecting the dots...</p>
             </div>
+          </div>
+        ) : isError ? (
+          <div className="absolute inset-0 flex items-center justify-center text-center px-6 text-muted-foreground">
+            Couldn't load your network map. Check your connection and try again.
           </div>
         ) : !graph || graph.nodes.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">

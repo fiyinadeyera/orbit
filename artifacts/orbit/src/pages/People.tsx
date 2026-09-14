@@ -80,8 +80,12 @@ export default function People() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: people = [], isLoading } = useListPeople({});
-  const { data: reconnects = [], isLoading: isLoadingReconnects } = useListReconnects();
+  const { data: people = [], isLoading, isError: peopleError } = useListPeople({});
+  const {
+    data: reconnects = [],
+    isLoading: isLoadingReconnects,
+    isError: reconnectsError,
+  } = useListReconnects();
   const ask = useAskNetwork();
   const createMutation = useCreatePerson();
 
@@ -192,6 +196,12 @@ export default function People() {
             Array(2)
               .fill(0)
               .map((_, i) => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)
+          ) : reconnectsError ? (
+            <Card className="bg-transparent border-dashed">
+              <CardContent className="p-6 text-center text-muted-foreground text-sm">
+                Couldn't load reconnects. Check your connection and try again.
+              </CardContent>
+            </Card>
           ) : reconnects.length === 0 ? (
             <Card className="bg-transparent border-dashed">
               <CardContent className="p-6 text-center text-muted-foreground text-sm">
@@ -252,6 +262,22 @@ export default function People() {
           <Sparkles className="w-8 h-8 text-primary animate-pulse" />
           <p className="text-lg font-serif text-foreground">Asking your network...</p>
         </div>
+      ) : ask.isError ? (
+        <Card className="border-dashed">
+          <CardContent className="p-6 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">Couldn't answer that right now.</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const q = question.trim();
+                if (q) ask.mutate({ data: { question: q } });
+              }}
+            >
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
       ) : asked && ask.data ? (
         <div className="space-y-6">
           <Card>
@@ -278,6 +304,10 @@ export default function People() {
             Array(6)
               .fill(0)
               .map((_, i) => <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />)
+          ) : peopleError ? (
+            <div className="col-span-full py-12 text-center text-muted-foreground bg-card/50 border border-dashed rounded-xl">
+              Couldn't load your people. Check your connection and try again.
+            </div>
           ) : people.length === 0 ? (
             <div className="col-span-full py-12 text-center text-muted-foreground bg-card/50 border border-dashed rounded-xl">
               No people yet. Capture someone, or add one manually.
