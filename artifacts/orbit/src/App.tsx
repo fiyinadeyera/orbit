@@ -14,6 +14,7 @@ import NotFound from '@/pages/not-found';
 import Login from '@/pages/Login';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Analytics from '@/pages/Analytics';
+import Account from '@/pages/Account';
 import { track } from '@/lib/track';
 import { authFetch, type AuthUser } from '@/lib-auth';
 import {
@@ -43,6 +44,7 @@ function Router() {
           <Route path="/graph" component={GraphView} />
           <Route path="/intros" component={Intros} />
           <Route path="/analytics" component={Analytics} />
+          <Route path="/account" component={Account} />
           <Route path="/search" component={Search} />
           <Route component={NotFound} />
         </Switch>

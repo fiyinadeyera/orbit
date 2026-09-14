@@ -134,4 +134,18 @@ router.post("/auth/logout", requireCsrf, async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
+// Permanently delete the signed-in user and all their data. The foreign keys
+// cascade, so removing the user row also removes their sessions, people,
+// connections, interactions, and events. Required for App Store review.
+router.post("/auth/delete-account", requireCsrf, async (req, res): Promise<void> => {
+  const user = await readUser(req);
+  if (!user) {
+    res.status(401).json({ error: "Not signed in." });
+    return;
+  }
+  await db.delete(usersTable).where(eq(usersTable.id, user.id));
+  clearAuthCookies(res);
+  res.sendStatus(204);
+});
+
 export default router;

@@ -99,9 +99,9 @@ export default function PrivacyPolicy() {
 
         <Section title="Retention and deletion">
           <p>
-            Orbit keeps your data until you ask to remove it. To request deletion of your account and
-            associated data, contact {CONTACT_EMAIL}. You can also edit or delete individual people
-            from within the app.
+            You can permanently delete your account and all associated data at any time from the
+            Account page in the app. You can also edit or delete individual people, or contact{' '}
+            {CONTACT_EMAIL} with any request.
           </p>
         </Section>
 

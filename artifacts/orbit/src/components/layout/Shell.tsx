@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
-import { Mic, Users, Network, Sparkles, LogOut } from 'lucide-react';
+import { Mic, Users, Network, Sparkles, Settings, LogOut } from 'lucide-react';
 import { authFetch } from '@/lib-auth';
 import { cn } from '@/lib/utils';
 
@@ -52,19 +52,30 @@ export function Shell({ children }: { children: React.ReactNode }) {
             );
           })}
         </div>
-        <button
-          className="mt-auto flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-          onClick={async () => { await authFetch('/api/auth/logout', { method: 'POST' }); window.location.assign('/'); }}
-          type="button"
-        >
-          <LogOut className="w-4 h-4" /> Sign out
-        </button>
+        <div className="mt-auto space-y-1">
+          <Link
+            href="/account"
+            className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground rounded-lg"
+          >
+            <Settings className="w-4 h-4 shrink-0" /> Account
+          </Link>
+          <button
+            className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+            onClick={async () => { await authFetch('/api/auth/logout', { method: 'POST' }); window.location.assign('/'); }}
+            type="button"
+          >
+            <LogOut className="w-4 h-4" /> Sign out
+          </button>
+        </div>
       </nav>
 
       {/* Mobile top brand bar */}
-      <div className="md:hidden sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur px-4 py-3">
+      <div className="md:hidden sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur px-4 py-3 flex items-center justify-between">
         <Link href="/" className="font-serif text-lg font-bold tracking-tight text-primary">
           Orbit
+        </Link>
+        <Link href="/account" aria-label="Account" className="text-muted-foreground hover:text-foreground">
+          <Settings className="w-5 h-5" />
         </Link>
       </div>
 
