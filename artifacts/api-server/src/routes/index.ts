@@ -6,6 +6,7 @@ import askRouter from "./ask";
 import analyticsRouter from "./analytics";
 import pushRouter from "./push";
 import cronRouter from "./cron";
+import demoRouter from "./demo";
 import importRouter from "./import";
 import audioRouter from "./audio";
 import authRouter from "./auth";
@@ -25,6 +26,7 @@ router.use(introsRouter);
 router.use(askRouter);
 router.use(analyticsRouter);
 router.use(pushRouter);
+router.use(demoRouter);
 router.use(importRouter);
 router.use(audioRouter);
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib-auth';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 type Summary = {
   totalUsers: number;
@@ -27,6 +28,23 @@ function Stat({ label, value, sub }: { label: string; value: string | number; su
 export default function Analytics() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [state, setState] = useState<State>('loading');
+  const [resetting, setResetting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const resetDemo = async () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      return;
+    }
+    setResetting(true);
+    try {
+      await authFetch('/api/demo/reset', { method: 'POST' });
+      window.location.reload();
+    } catch {
+      setResetting(false);
+      setConfirmReset(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -111,6 +129,21 @@ export default function Analytics() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-serif font-semibold">Demo data</h2>
+        <p className="text-sm text-muted-foreground">
+          Reset your network to a curated demo set. This deletes your current people first.
+        </p>
+        <Button
+          variant={confirmReset ? 'destructive' : 'outline'}
+          size="sm"
+          disabled={resetting}
+          onClick={resetDemo}
+        >
+          {resetting ? 'Resetting...' : confirmReset ? 'Click again to confirm' : 'Reset to demo data'}
+        </Button>
       </section>
     </div>
   );
