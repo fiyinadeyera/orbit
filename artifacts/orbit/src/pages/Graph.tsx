@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
 import { Network } from 'lucide-react';
+import { track } from '@/lib/track';
 
 export default function GraphView() {
   const { data: graph, isLoading } = useGetGraph();
@@ -13,6 +14,10 @@ export default function GraphView() {
 
   // Simple force-directed graph state
   const [positions, setPositions] = useState<Record<string, {x: number, y: number}>>({});
+
+  useEffect(() => {
+    track('graph_opened');
+  }, []);
 
   // Measure the visible card so the layout is centered on the real viewport,
   // on phones as well as desktop.

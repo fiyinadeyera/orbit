@@ -1,6 +1,8 @@
 import { relations } from "drizzle-orm";
 import {
   date,
+  index,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -87,6 +89,27 @@ export const connectionsTable = pgTable("connections", {
   notes: text("notes"),
 });
 
+// Product analytics: one row per tracked event (person captured, app opened,
+// graph opened, ...). Used to answer activation and "do people come back".
+export const eventsTable = pgTable(
+  "events",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    userId: varchar("user_id", { length: 64 })
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    props: jsonb("props").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("events_name_created_idx").on(table.name, table.createdAt),
+    index("events_user_created_idx").on(table.userId, table.createdAt),
+  ],
+);
+
 export const usersRelations = relations(usersTable, ({ many }) => ({
   people: many(peopleTable),
   sessions: many(sessionsTable),
@@ -111,6 +134,7 @@ export const insertInteractionSchema = createInsertSchema(interactionsTable).omi
 export const insertConnectionSchema = createInsertSchema(connectionsTable).omit({ ownerId: true });
 
 export type Person = typeof peopleTable.$inferSelect;
+export type Event = typeof eventsTable.$inferSelect;
 export type Interaction = typeof interactionsTable.$inferSelect;
 export type Connection = typeof connectionsTable.$inferSelect;
 export type InsertPerson = z.infer<typeof insertPersonSchema>;

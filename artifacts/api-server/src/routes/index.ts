@@ -3,6 +3,7 @@ import healthRouter from "./health";
 import orbitRouter from "./orbit";
 import introsRouter from "./intros";
 import askRouter from "./ask";
+import analyticsRouter from "./analytics";
 import importRouter from "./import";
 import audioRouter from "./audio";
 import authRouter from "./auth";
@@ -19,6 +20,7 @@ router.use(requireCsrf);
 router.use(orbitRouter);
 router.use(introsRouter);
 router.use(askRouter);
+router.use(analyticsRouter);
 router.use(importRouter);
 router.use(audioRouter);
 

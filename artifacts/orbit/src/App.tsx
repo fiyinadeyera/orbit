@@ -13,6 +13,8 @@ import Search from '@/pages/Search';
 import NotFound from '@/pages/not-found';
 import Login from '@/pages/Login';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import Analytics from '@/pages/Analytics';
+import { track } from '@/lib/track';
 import { authFetch, type AuthUser } from '@/lib-auth';
 import {
   Route,
@@ -40,6 +42,7 @@ function Router() {
           <Route path="/people/:id" component={PersonDetail} />
           <Route path="/graph" component={GraphView} />
           <Route path="/intros" component={Intros} />
+          <Route path="/analytics" component={Analytics} />
           <Route path="/search" component={Search} />
           <Route component={NotFound} />
         </Switch>
@@ -59,7 +62,10 @@ function App() {
 
   useEffect(() => {
     authFetch<{ user: AuthUser }>('/api/auth/me')
-      .then((result) => setUser(result.user))
+      .then((result) => {
+        setUser(result.user);
+        if (result.user) track('app_opened');
+      })
       .catch(() => setUser(null))
       .finally(() => setChecking(false));
   }, []);

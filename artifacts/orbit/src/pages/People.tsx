@@ -18,6 +18,7 @@ import { getInitials } from '@/lib/utils';
 import { Search, Plus, Clock, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportContactsDialog } from '@/components/ImportContactsDialog';
+import { track } from '@/lib/track';
 
 type CardPerson = {
   id: string;
@@ -90,6 +91,7 @@ export default function People() {
     e.preventDefault();
     const q = question.trim();
     if (!q || ask.isPending) return;
+    track('ask_used');
     ask.mutate({ data: { question: q } });
   };
 
