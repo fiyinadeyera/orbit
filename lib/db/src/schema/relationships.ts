@@ -110,6 +110,24 @@ export const eventsTable = pgTable(
   ],
 );
 
+// Web Push subscriptions, one row per browser/device a user opted in from.
+export const pushSubscriptionsTable = pgTable(
+  "push_subscriptions",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    userId: varchar("user_id", { length: 64 })
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("push_subscriptions_user_idx").on(table.userId)],
+);
+
 export const usersRelations = relations(usersTable, ({ many }) => ({
   people: many(peopleTable),
   sessions: many(sessionsTable),
@@ -135,6 +153,7 @@ export const insertConnectionSchema = createInsertSchema(connectionsTable).omit(
 
 export type Person = typeof peopleTable.$inferSelect;
 export type Event = typeof eventsTable.$inferSelect;
+export type PushSubscription = typeof pushSubscriptionsTable.$inferSelect;
 export type Interaction = typeof interactionsTable.$inferSelect;
 export type Connection = typeof connectionsTable.$inferSelect;
 export type InsertPerson = z.infer<typeof insertPersonSchema>;

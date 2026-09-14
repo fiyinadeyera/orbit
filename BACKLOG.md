@@ -32,6 +32,16 @@ On the iOS app (already logged): the real prize isn't "native", it's **push
 notifications.** That's when "nudges you to reconnect" becomes something Orbit
 does to you, instead of something you have to open the app to see.
 
+**Reconnect push notifications (2026-09-14):** building **web push** now (works
+with the live web auth, on the deployed web app, desktop + Android + iPhone via
+the home-screen PWA install, self-hosted VAPID). **Native iOS push is deferred,
+revisit ~week of 2026-09-21.** It is blocked: the Expo app has no login, so a
+push token can't be tied to a user. Native push therefore needs, in order:
+(1) mobile login (the bearer-token auth path, backlog item 8), (2) the
+expo-notifications integration, (3) Apple membership + review to actually
+deliver on device. Do the web-push pipeline first; native reuses the same
+backend send + reconnect-nudge job.
+
 ## Key insight: Orbit was built out of order
 
 Orbit was built top-down. The exciting top-of-stack work exists (core loop,

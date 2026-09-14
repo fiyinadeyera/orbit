@@ -11,6 +11,9 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { pushSupported, isPushEnabled, enablePush, disablePush } from '@/lib/push';
+
+type PushState = 'checking' | 'unsupported' | 'off' | 'on' | 'working';
 
 export default function Account() {
   const [email, setEmail] = useState<string | null>(null);
@@ -18,12 +21,41 @@ export default function Account() {
   const [confirm, setConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pushState, setPushState] = useState<PushState>('checking');
+  const [pushError, setPushError] = useState<string | null>(null);
 
   useEffect(() => {
     authFetch<{ user: AuthUser }>('/api/auth/me')
       .then((r) => setEmail(r.user?.email ?? null))
       .catch(() => setEmail(null));
   }, []);
+
+  useEffect(() => {
+    if (!pushSupported()) {
+      setPushState('unsupported');
+      return;
+    }
+    isPushEnabled().then((on) => setPushState(on ? 'on' : 'off'));
+  }, []);
+
+  const togglePush = async () => {
+    const wasOn = pushState === 'on';
+    setPushError(null);
+    setPushState('working');
+    try {
+      if (wasOn) {
+        await disablePush();
+        setPushState('off');
+      } else {
+        const ok = await enablePush();
+        setPushState(ok ? 'on' : 'off');
+        if (!ok) setPushError('Allow notifications in your browser to get reminders.');
+      }
+    } catch {
+      setPushState(wasOn ? 'on' : 'off');
+      setPushError('Something went wrong. Try again.');
+    }
+  };
 
   const signOut = async () => {
     await authFetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
@@ -58,6 +90,30 @@ export default function Account() {
           <Button variant="outline" onClick={signOut} className="shrink-0">
             Sign out
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Reconnect reminders</p>
+            <p className="text-xs text-muted-foreground">
+              A push notification when people are due for a reconnect.
+            </p>
+            {pushError && <p className="text-xs text-destructive mt-1">{pushError}</p>}
+          </div>
+          {pushState === 'unsupported' ? (
+            <span className="text-xs text-muted-foreground shrink-0">Not supported here</span>
+          ) : (
+            <Button
+              variant="outline"
+              className="shrink-0"
+              disabled={pushState === 'working' || pushState === 'checking'}
+              onClick={togglePush}
+            >
+              {pushState === 'on' ? 'Turn off' : pushState === 'working' ? 'Working...' : 'Turn on'}
+            </Button>
+          )}
         </CardContent>
       </Card>
 

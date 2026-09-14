@@ -1,0 +1,20 @@
+name: Reconnect nudges
+
+# Sends reconnect push notifications on a schedule by calling the secret-gated
+# cron endpoint. Set CRON_SECRET as a repo Actions secret, matching the
+# CRON_SECRET env var on the orbit-api service.
+
+on:
+  schedule:
+    - cron: "0 14 */3 * *" # every 3 days at 14:00 UTC
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+jobs:
+  nudge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger reconnect nudges
+        run: |
+          curl -fsS -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://orbit-api-z3y6.onrender.com/api/cron/reconnect-nudges
