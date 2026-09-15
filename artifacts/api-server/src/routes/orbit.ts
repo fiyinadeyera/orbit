@@ -61,14 +61,21 @@ function personValues(
     dateMet?: Date;
     notes?: string;
     lookingFor?: string;
+    reminderEnabled?: boolean;
+    reminderDays?: number | null;
+    lastContacted?: Date;
     tags?: string[];
   },
 ) {
   return {
     ...input,
     dateMet: input.dateMet ? isoDate(input.dateMet) : undefined,
+    lastContacted: input.lastContacted ? isoDate(input.lastContacted) : undefined,
   };
 }
+
+// The cadence used when a person has no custom `reminderDays` set.
+const DEFAULT_REMINDER_DAYS = 30;
 
 router.get("/people", async (req, res): Promise<void> => {
   const ownerId = currentUser(res).id;
@@ -489,7 +496,12 @@ router.get("/reconnects", async (_req, res): Promise<void> => {
         person,
         daysSinceContact: dayDifference(person.lastContacted ?? isoDate(person.createdAt)),
       }))
-      .filter(({ daysSinceContact }) => daysSinceContact >= 30)
+      // Only surface people the user still wants reminders for, and only once
+      // they've gone past that person's own cadence (or the default).
+      .filter(
+        ({ person, daysSinceContact }) =>
+          person.reminderEnabled && daysSinceContact >= (person.reminderDays ?? DEFAULT_REMINDER_DAYS),
+      )
       .map(async ({ person, daysSinceContact }) => {
         const [lastInteraction] = await db
           .select({ summary: interactionsTable.summary })

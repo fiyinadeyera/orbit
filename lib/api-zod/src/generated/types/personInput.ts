@@ -16,5 +16,11 @@ export interface PersonInput {
   dateMet?: Date;
   notes?: string;
   lookingFor?: string;
+  reminderEnabled?: boolean;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  reminderDays?: number | null;
   tags?: string[];
 }

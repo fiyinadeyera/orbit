@@ -1,7 +1,9 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   date,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -55,6 +57,11 @@ export const peopleTable = pgTable("people", {
   // reason over goals directly.
   lookingFor: text("looking_for"),
   lastContacted: date("last_contacted", { mode: "string" }),
+  // Per-person reconnect reminders. `reminderEnabled` is the on/off switch the
+  // user controls per contact (default on); `reminderDays` is how stale a
+  // contact may get before Orbit flags them (null = the default 30-day cadence).
+  reminderEnabled: boolean("reminder_enabled").notNull().default(true),
+  reminderDays: integer("reminder_days"),
   tags: text("tags").array().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

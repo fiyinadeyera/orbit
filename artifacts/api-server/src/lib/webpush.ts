@@ -64,12 +64,14 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
 export async function runReconnectNudges(): Promise<{ nudged: number }> {
   if (!ensureConfigured()) return { nudged: 0 };
 
-  // Reconnect-due count per owner (last contact, or creation date, 30+ days ago).
+  // Reconnect-due count per owner: people who still have reminders enabled and
+  // have gone past their own cadence (or the default 30-day one), measured from
+  // last contact or, failing that, when they were added.
   const dueRows = await db
     .select({ ownerId: peopleTable.ownerId, due: sql<number>`count(*)::int` })
     .from(peopleTable)
     .where(
-      sql`COALESCE(${peopleTable.lastContacted}, ${peopleTable.createdAt}::date) <= CURRENT_DATE - 30`,
+      sql`${peopleTable.reminderEnabled} = true AND COALESCE(${peopleTable.lastContacted}, ${peopleTable.createdAt}::date) <= CURRENT_DATE - (COALESCE(${peopleTable.reminderDays}, 30) * INTERVAL '1 day')`,
     )
     .groupBy(peopleTable.ownerId);
 

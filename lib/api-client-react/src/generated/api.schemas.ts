@@ -29,6 +29,12 @@ export interface Person {
   lookingFor: string | null;
   /** @nullable */
   lastContacted: string | null;
+  reminderEnabled: boolean;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  reminderDays: number | null;
   tags: string[];
   createdAt: string;
 }
@@ -57,6 +63,12 @@ export interface PersonInput {
   dateMet?: string;
   notes?: string;
   lookingFor?: string;
+  reminderEnabled?: boolean;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  reminderDays?: number | null;
   tags?: string[];
 }
 
@@ -70,6 +82,13 @@ export interface PersonUpdate {
   dateMet?: string;
   notes?: string;
   lookingFor?: string;
+  reminderEnabled?: boolean;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  reminderDays?: number | null;
+  lastContacted?: string;
   tags?: string[];
 }
 

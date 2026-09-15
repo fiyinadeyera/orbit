@@ -278,7 +278,7 @@ components:
         - status
     Person:
       type: object
-      required: [id, name, company, role, location, howMet, dateMet, notes, lookingFor, lastContacted, tags, createdAt]
+      required: [id, name, company, role, location, howMet, dateMet, notes, lookingFor, lastContacted, reminderEnabled, reminderDays, tags, createdAt]
       properties:
         id: { type: string }
         name: { type: string }
@@ -290,6 +290,8 @@ components:
         notes: { type: ["string", "null"] }
         lookingFor: { type: ["string", "null"] }
         lastContacted: { type: ["string", "null"], format: date }
+        reminderEnabled: { type: boolean }
+        reminderDays: { type: ["number", "null"], minimum: 1 }
         tags:
           type: array
           items: { type: string }
@@ -306,6 +308,8 @@ components:
         dateMet: { type: string, format: date }
         notes: { type: string }
         lookingFor: { type: string }
+        reminderEnabled: { type: boolean }
+        reminderDays: { type: ["number", "null"], minimum: 1 }
         tags:
           type: array
           items: { type: string }
@@ -320,6 +324,9 @@ components:
         dateMet: { type: string, format: date }
         notes: { type: string }
         lookingFor: { type: string }
+        reminderEnabled: { type: boolean }
+        reminderDays: { type: ["number", "null"], minimum: 1 }
+        lastContacted: { type: string, format: date }
         tags:
           type: array
           items: { type: string }

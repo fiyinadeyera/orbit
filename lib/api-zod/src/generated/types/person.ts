@@ -25,6 +25,12 @@ export interface Person {
   lookingFor: string | null;
   /** @nullable */
   lastContacted: Date | null;
+  reminderEnabled: boolean;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  reminderDays: number | null;
   tags: string[];
   createdAt: Date;
 }

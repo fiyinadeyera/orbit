@@ -15,13 +15,109 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { getInitials, formatDate } from '@/lib/utils';
 import {
   ArrowLeft, Edit2, Trash2,
-  Calendar, Network, FileText, Plus, MessageSquare, Sparkles, Loader2
+  Calendar, Network, FileText, MessageSquare, Sparkles, Loader2, Bell
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const DEFAULT_REMINDER_DAYS = 30;
+const CADENCE_OPTIONS = [
+  { value: 30, label: 'Every 30 days' },
+  { value: 90, label: 'Every 90 days' },
+  { value: 180, label: 'Every 6 months' },
+  { value: 365, label: 'Once a year' },
+];
+
+// Per-person control over reconnect reminders: an on/off switch plus, when on,
+// how stale the relationship may get before Orbit flags it. Writes straight
+// through updatePerson so the People "Time to reconnect" list and push nudges
+// reflect it immediately.
+function ReminderControls({
+  person,
+}: {
+  person: { id: string; reminderEnabled: boolean; reminderDays?: number | null; lastContacted?: string | null };
+}) {
+  const queryClient = useQueryClient();
+  const updateMutation = useUpdatePerson();
+  const enabled = person.reminderEnabled;
+  const days = person.reminderDays ?? DEFAULT_REMINDER_DAYS;
+
+  const save = (data: { reminderEnabled?: boolean; reminderDays?: number }) => {
+    updateMutation.mutate(
+      { id: person.id, data },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetPersonQueryKey(person.id) });
+          queryClient.invalidateQueries({ queryKey: getListPeopleQueryKey() });
+        },
+        onError: () => toast.error("Couldn't update reminders. Try again."),
+      },
+    );
+  };
+
+  const lastContactedAt = person.lastContacted ? new Date(person.lastContacted) : null;
+  const nextDue =
+    lastContactedAt && !Number.isNaN(lastContactedAt.getTime())
+      ? new Date(lastContactedAt.getTime() + days * 86_400_000)
+      : null;
+  const isOverdue = nextDue ? nextDue.getTime() <= Date.now() : false;
+
+  return (
+    <Card className="bg-secondary/20 border-border/50 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Bell className="w-4 h-4 text-primary" /> Reconnect reminders
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <label htmlFor="reminder-toggle" className="text-sm text-foreground/90 cursor-pointer">
+            Remind me to reconnect
+          </label>
+          <Switch
+            id="reminder-toggle"
+            checked={enabled}
+            disabled={updateMutation.isPending}
+            onCheckedChange={(checked) => save({ reminderEnabled: checked })}
+          />
+        </div>
+
+        {enabled && (
+          <div className="space-y-2">
+            <Select
+              value={String(days)}
+              onValueChange={(value) => save({ reminderDays: Number(value) })}
+              disabled={updateMutation.isPending}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CADENCE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={String(option.value)}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {nextDue && (
+              <p className="text-xs text-muted-foreground">
+                {isOverdue ? 'Due to reconnect now.' : `Next reminder ${formatDate(nextDue.toISOString())}.`}
+              </p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function PersonDetail() {
   const { id } = useParams<{ id: string }>();
@@ -275,6 +371,8 @@ export default function PersonDetail() {
               )}
             </CardContent>
           </Card>
+
+          <ReminderControls person={person} />
 
           {enrichment?.summary && (
             <Card className="bg-secondary/20 border-border/50 shadow-sm">

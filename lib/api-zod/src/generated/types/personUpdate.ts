@@ -16,5 +16,12 @@ export interface PersonUpdate {
   dateMet?: Date;
   notes?: string;
   lookingFor?: string;
+  reminderEnabled?: boolean;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  reminderDays?: number | null;
+  lastContacted?: Date;
   tags?: string[];
 }

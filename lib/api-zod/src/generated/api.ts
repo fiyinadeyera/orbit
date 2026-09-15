@@ -24,6 +24,9 @@ export const ListPeopleQueryParams = zod.object({
   "search": zod.coerce.string().optional()
 })
 
+
+
+
 export const ListPeopleResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string(),
@@ -35,6 +38,8 @@ export const ListPeopleResponseItem = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 })
@@ -47,6 +52,7 @@ export const ListPeopleResponse = zod.array(ListPeopleResponseItem)
 
 
 
+
 export const CreatePersonBody = zod.object({
   "name": zod.string().min(1),
   "company": zod.string().optional(),
@@ -56,8 +62,13 @@ export const CreatePersonBody = zod.object({
   "dateMet": zod.coerce.date().optional(),
   "notes": zod.string().optional(),
   "lookingFor": zod.string().optional(),
+  "reminderEnabled": zod.boolean().optional(),
+  "reminderDays": zod.number().min(1).nullish(),
   "tags": zod.array(zod.string()).optional()
 })
+
+
+
 
 export const CreatePersonResponse = zod.object({
   "id": zod.string(),
@@ -70,6 +81,8 @@ export const CreatePersonResponse = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 })
@@ -82,6 +95,9 @@ export const GetPersonParams = zod.object({
   "id": zod.coerce.string()
 })
 
+
+
+
 export const GetPersonResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
@@ -93,6 +109,8 @@ export const GetPersonResponse = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 }).and(zod.object({
@@ -123,6 +141,7 @@ export const UpdatePersonParams = zod.object({
 
 
 
+
 export const UpdatePersonBody = zod.object({
   "name": zod.string().min(1).optional(),
   "company": zod.string().optional(),
@@ -132,8 +151,14 @@ export const UpdatePersonBody = zod.object({
   "dateMet": zod.coerce.date().optional(),
   "notes": zod.string().optional(),
   "lookingFor": zod.string().optional(),
+  "reminderEnabled": zod.boolean().optional(),
+  "reminderDays": zod.number().min(1).nullish(),
+  "lastContacted": zod.coerce.date().optional(),
   "tags": zod.array(zod.string()).optional()
 })
+
+
+
 
 export const UpdatePersonResponse = zod.object({
   "id": zod.string(),
@@ -146,6 +171,8 @@ export const UpdatePersonResponse = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 })
@@ -242,6 +269,9 @@ export const ConfirmCaptureBody = zod.object({
   "forceNew": zod.boolean().optional().describe('When true, always save this as a brand-new person even if the name matches an existing contact, instead of merging into them.')
 })
 
+
+
+
 export const ConfirmCaptureResponse = zod.object({
   "person": zod.object({
   "id": zod.string(),
@@ -254,6 +284,8 @@ export const ConfirmCaptureResponse = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 }),
@@ -283,6 +315,7 @@ export const importContactsResponseSkippedMin = 0;
 
 
 
+
 export const ImportContactsResponse = zod.object({
   "imported": zod.number().min(importContactsResponseImportedMin),
   "skipped": zod.number().min(importContactsResponseSkippedMin),
@@ -297,6 +330,8 @@ export const ImportContactsResponse = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 }))
@@ -306,6 +341,7 @@ export const ImportContactsResponse = zod.object({
 /**
  * @summary List people who may be due for a reconnection
  */
+
 export const listReconnectsResponseDaysSinceContactMin = 0;
 
 
@@ -322,6 +358,8 @@ export const ListReconnectsResponseItem = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 }),
@@ -390,6 +428,9 @@ export const AskNetworkBody = zod.object({
   "question": zod.string().min(1)
 })
 
+
+
+
 export const AskNetworkResponse = zod.object({
   "answer": zod.string(),
   "matches": zod.array(zod.object({
@@ -404,6 +445,8 @@ export const AskNetworkResponse = zod.object({
   "notes": zod.string().nullable(),
   "lookingFor": zod.string().nullable(),
   "lastContacted": zod.coerce.date().nullable(),
+  "reminderEnabled": zod.boolean(),
+  "reminderDays": zod.number().min(1).nullable(),
   "tags": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
 }),
